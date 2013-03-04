@@ -10,8 +10,6 @@ import org.apache.hadoop.hive.serde2.lazy.LazyFactory;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.lazy.objectinspector.LazySimpleStructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.Writable;
 import org.apache.log4j.Logger;
 
@@ -30,10 +28,10 @@ public class AccumuloSerde implements SerDe {
     public static final String ZOOKEEPERS = "accumuo.zookeepers";
     public static final String INSTANCE_ID = "accumulo.instance.id";
     public static final String COLUMN_MAPPINGS = "accumulo.columns.mapping";
-    public static final String ACCUMULO_KEY_COL = ":key";
+    public static final String ACCUMULO_KEY_MAPPING = "accumulo.rowid.mapping";
     private LazySimpleSerDe.SerDeParameters serDeParameters;
     private LazyAccumuloRow cachedRow;
-    private List<String> fams;
+    private List<String> fetchCols;
     private String colMapping;
     private byte[] separators;
     private boolean escaped;
@@ -43,9 +41,9 @@ public class AccumuloSerde implements SerDe {
     private static final Logger log = Logger.getLogger(AccumuloSerde.class);
 
     private ObjectInspector cachedObjectInspector;
-    private static final String MAP_STRING_STRING_NAME = Constants.MAP_TYPE_NAME + "<" +
-            Constants.STRING_TYPE_NAME + "," +
-            Constants.STRING_TYPE_NAME + ">";
+    //private static final String MAP_STRING_STRING_NAME = Constants.MAP_TYPE_NAME + "<" +
+            //Constants.STRING_TYPE_NAME + "," +
+            //Constants.STRING_TYPE_NAME + ">";
 
     public void initialize(Configuration conf, Properties properties) throws SerDeException {
         initAccumuloSerdeParameters(conf, properties);
@@ -68,7 +66,7 @@ public class AccumuloSerde implements SerDe {
     }
 
     public static boolean isKeyField(String colName) {
-        return colName.equals(ACCUMULO_KEY_COL);
+        return colName.equals(ACCUMULO_KEY_MAPPING);
     }
 
     private void initAccumuloSerdeParameters(Configuration conf, Properties properties)
@@ -76,24 +74,25 @@ public class AccumuloSerde implements SerDe {
         colMapping = properties.getProperty(COLUMN_MAPPINGS);
         String colTypeProperty = properties.getProperty(Constants.LIST_COLUMN_TYPES);
         String name = getClass().getName();
-        fams = parseColumnMapping(colMapping);
-        //TODO: eventually make the key num instance global.
+        fetchCols = parseColumnMapping(colMapping);
+        //TODO: support key parsing
         if (colTypeProperty == null) {
             StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < fams.size(); i++) {
+            for (int i = 0; i < fetchCols.size(); i++) {
                 builder.append(MAP_STRING_STRING_NAME + ":");
+                //TODO: support additional key column mapping with error checking.
             }
             int indexOfLastColon = builder.lastIndexOf(":");
             builder.replace(indexOfLastColon, indexOfLastColon+1, "");
             properties.setProperty(Constants.LIST_COLUMN_TYPES, builder.toString());
         }
         serDeParameters = LazySimpleSerDe.initSerdeParams(conf, properties, name);
-
-        if (fams.size() != serDeParameters.getColumnNames().size()) {
+        //TODO: Support optional accumulo key mapping.
+        if (fetchCols.size() != serDeParameters.getColumnNames().size()) {
             throw new SerDeException(name + ": columns has "
                     + serDeParameters.getColumnNames().size() +
                     " elements while accumulo.column.mapping has " +
-                    fams.size() + " elements, +1 for the key.");
+                    fetchCols.size() + " elements, +1 for the key.");
         }
         separators = serDeParameters.getSeparators();
         escaped = serDeParameters.isEscaped();
@@ -107,17 +106,20 @@ public class AccumuloSerde implements SerDe {
     public static List<String> parseColumnMapping(String columnMapping)
             throws SerDeException{
         List<String> colQualFamPairs = Lists.newArrayList();
-        colQualFamPairs.add("cf");
+        if (!columnMapping.equals("cf:f1"))
+            throw new UnsupportedOperationException("for testing purposes, only cf:f1 is supported for accumulo.column.mapping");
+        colQualFamPairs.add("cf:f1");
+        //TODO flexible schema that handles optional rowid mapping
         return colQualFamPairs;
 
     }
 
     public Class<? extends Writable> getSerializedClass() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return AccumuloHiveRow.class;
     }
 
     public Writable serialize(Object o, ObjectInspector objectInspector) throws SerDeException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        //TODO: implement serialization.
     }
 
     public Object deserialize(Writable writable) throws SerDeException {
@@ -125,7 +127,10 @@ public class AccumuloSerde implements SerDe {
             throw new SerDeException(getClass().getName() + " : " +
                     "Expects AccumuloHiveRow. Got " + writable.getClass().getName());
         }
+        if(log.isInfoEnabled())
+            log.info("Got accumulo row");
 
+        cachedRow.init((AccumuloHiveRow)writable, fetchCols);
         return writable;
     }
 

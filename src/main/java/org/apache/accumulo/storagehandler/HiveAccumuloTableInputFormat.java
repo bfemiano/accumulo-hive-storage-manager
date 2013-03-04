@@ -13,16 +13,20 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.core.util.Pair;
 import org.apache.accumulo.core.util.PeekingIterator;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
@@ -43,7 +47,46 @@ public class HiveAccumuloTableInputFormat
 
     @Override
     public InputSplit[] getSplits(JobConf jobConf, int i) throws IOException {
-        //
+        String tableName = jobConf.get(AccumuloSerde.TABLE_NAME);
+        String instance = jobConf.get(AccumuloSerde.INSTANCE_ID);
+        String user = jobConf.get(AccumuloSerde.USER_NAME);
+        String pass = jobConf.get(AccumuloSerde.USER_PASS);
+        String zookeepers = jobConf.get(AccumuloSerde.ZOOKEEPERS);
+
+        try {
+            Connector connector = new ZooKeeperInstance(instance, zookeepers).getConnector(user, pass.getBytes());
+            Authorizations auths = connector.securityOperations().getUserAuthorizations(user);
+            setInputInfo(jobConf, user, pass.getBytes(), tableName, auths);
+            String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
+            List<String> colQualFamPairs;
+            try {
+                colQualFamPairs = AccumuloSerde.parseColumnMapping(colMapping);
+            } catch (SerDeException e) {
+                throw new IOException(StringUtils.stringifyException(e));
+            }
+
+            List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
+            if (colQualFamPairs.size() < readColIds.size())
+                throw new IOException("Can't read more columns than the given table contains.");
+
+
+            fetchColumns(jobConf, getPairCollection(colQualFamPairs));
+
+            Job job = new Job(jobConf);
+            JobContext context = new JobContext(job.getConfiguration(), job.getJobID());
+            Path[] tablePaths = FileInputFormat.getInputPaths(context);
+            List<org.apache.hadoop.mapreduce.InputSplit> splits = super.getSplits(job);
+            InputSplit[] newSplits = new InputSplit[splits.size()];
+            for (int j = 0; j < splits.size(); j++) {
+                newSplits[i] = new AccumuloSplit((RangeInputSplit)splits.get(i), tablePaths[0]);
+
+            }
+            return newSplits;
+        }  catch (AccumuloException e) {
+            throw new IOException(StringUtils.stringifyException(e));
+        } catch (AccumuloSecurityException e) {
+            throw new IOException(StringUtils.stringifyException(e));
+        }
     }
 
     @Override
@@ -126,13 +169,22 @@ public class HiveAccumuloTableInputFormat
 
                 @Override
                 public boolean next(Text rowKey, AccumuloHiveRow value) throws IOException {
-
-                    boolean next = false;
-
+                    boolean next;
                     try {
-                        //loop through key/value pairs until the rowID transitions, call nextKeyValue() once more
-                        //before returning the result of that call.
-                        value
+                        next = recordReader.nextKeyValue();
+                        Key key = recordReader.getCurrentKey();
+                        Value val = recordReader.getCurrentValue();
+                        rowKey.set(key.getRow());
+                        value = new AccumuloHiveRow(key.getRow().toString());
+                        while (key.getRow().equals(rowKey) && next) {
+                            value.add(key.getColumnFamily().toString(),
+                                    key.getColumnQualifier().toString(),
+                                    val.get());
+
+                            next = recordReader.nextKeyValue();
+                            key = recordReader.getCurrentKey();
+                            val = recordReader.getCurrentValue();
+                        }
                     } catch (InterruptedException e) {
                         throw new IOException(StringUtils.stringifyException(e));
                     }

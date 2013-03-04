@@ -1,29 +1,22 @@
 package org.apache.accumulo.storagehandler;
 
-import com.google.common.collect.Lists;
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.admin.TableOperations;
-import org.apache.accumulo.core.conf.AccumuloConfiguration;
-import org.apache.accumulo.core.data.Mutation;
-import org.apache.accumulo.core.security.Authorizations;
+import org.apache.commons.cli.MissingArgumentException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler;
-import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler;
-import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
-import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -43,26 +36,15 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
     private Connector connector;
     private ZooKeeperInstance instance;
 
-    private final long MAX_MEMORY = 1000000L; // bytes to store before sending a batch
-    private final long TIMEOUT = 1000L; // milliseconds to wait before sending
-    private final int NUM_THREADS = 10;
-
     private static final Logger log = Logger.getLogger(AccumuloStorageHandler.class);
 
     private Connector getConnector(Map<String,String> parameters)
             throws MetaException{
-        String user = getFromConf(AccumuloSerde.USER_NAME);
-        String pass = getFromConf(AccumuloSerde.USER_PASS);
-        String inst = getFromConf(AccumuloSerde.INSTANCE_ID);
-        String zookeepers = getFromConf(AccumuloSerde.ZOOKEEPERS);
 
         if (connector == null){
             try {
-                connector = instance.getConnector(user, pass.getBytes());
-                instance = new ZooKeeperInstance(inst, zookeepers);
-            } catch (AccumuloException e) {
-                throw new MetaException(StringUtils.stringifyException(e));
-            } catch (AccumuloSecurityException e) {
+                connector = AccumuloHiveUtils.getConnector(conf);
+            } catch (IOException e) {
                 throw new MetaException(StringUtils.stringifyException(e));
             }
         }
@@ -88,24 +70,6 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
         return tableName;
     }
 
-    private String getProperty(Map<String, String> parameters, String propName)
-            throws MetaException{
-        String prop = parameters.get(propName);
-        if (prop == null)
-            throw new MetaException("Property " + propName + " is missing from TBLPROPERTIES");
-        return prop;
-    }
-
-    private String getFromConf(String property)
-        throws MetaException{
-         String propValue = conf.get(property);
-        if (propValue == null)
-            throw new MetaException("Forgot to set property: " + property + " in your script");
-        return propValue;
-    }
-
-
-
     @Override
     public Configuration getConf() {
         return conf;
@@ -128,7 +92,7 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
 
     @Override
     public Class<? extends InputFormat> getInputFormatClass() {
-         return HiveAccumuloTableInputFormat.class;
+        return HiveAccumuloTableInputFormat.class;
     }
 
 
@@ -153,7 +117,7 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
                 if(!isExternal) {
                     tableOpts.create(tblName);
                     tableOpts.online(tblName);
-//                    BatchWriter writer = connector.createBatchWriter(tblName, MAX_MEMORY, TIMEOUT, NUM_THREADS);
+//                    BatchWriter writer = connector.createBatchWriter(tblName, WRITER_MAX_MEMORY, WRITER_TIMEOUT, WRITER_NUM_THREADS);
 //                    Mutation m = new Mutation(fams.get(0));
 //                    m.put(new Text(fams.get(0)), new Text(quals.get(0)));
                 } else {
