@@ -1,70 +1,0 @@
-10
-
-dir
-0
-https://svn.apache.org/repos/asf/accumulo/trunk/contrib/hive-storage-handler/src/main/java/org/apache/accumulo/storagehandler
-https://svn.apache.org/repos/asf
-add
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-13f79535-47bb-0310-9956-ffa450edef68
-
-LazyAccumuloRow.java
-file
-
-
-
-add
-
-AccumuloSplit.java
-file
-
-
-
-add
-
-HiveAccumuloTableInputFormat.java
-file
-
-
-
-add
-
-AccumuloSerde.java
-file
-
-
-
-add
-
-AccumuloStorageHandler.java
-file
-
-
-
-add
-
-AccumuloHiveRow.java
-file
-
-
-
-add
-
