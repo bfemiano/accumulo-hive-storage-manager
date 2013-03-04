@@ -7,6 +7,8 @@ Working commits for Hive connector to Accumulo. This will eventually be patched 
 
 About 70% done. Still needs serialization support and predicate pushdown, plus a shit ton of testing. All the mistakes I made probably means it's more like 50%. 
 
-Avoiding using for now, if you happen to find this project before I post the patch to https://issues.apache.org/jira/browse/ACCUMULO-143
+Right now it won't even compile. 
+
+Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
 
 Soon Neil will have a new shiny toy to dangle in front of Jonathan. 
