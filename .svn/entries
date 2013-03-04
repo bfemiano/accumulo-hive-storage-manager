@@ -1,0 +1,70 @@
+10
+
+dir
+0
+https://svn.apache.org/repos/asf/accumulo/trunk/contrib/hive-storage-handler
+https://svn.apache.org/repos/asf
+add
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+13f79535-47bb-0310-9956-ffa450edef68
+
+accumulo_create_table.sql
+file
+
+
+
+add
+
+derby.log
+file
+
+
+
+add
+
+src
+dir
+
+
+
+add
+
+hive-storage-handler.iml
+file
+
+
+
+add
+
+pom.xml
+file
+
+
+
+add
+
+README.md
+file
+
+
+
+add
+
