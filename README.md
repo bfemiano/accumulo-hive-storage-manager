@@ -1,14 +1,10 @@
 accumulo-hive-storage-manager
 =============================
 
-Manage your Accumulo 1.4.1 tables through the Hive metastore, and issue queries directly over the underlying column familes and qualifiers. 
+Manage your Accumulo tables through the Hive metastore, and issue queries directly over the underlying column familes and qualifiers. 
 
-Working commits for Hive connector to Accumulo. This will eventually be patched in Accumulo trunk. 
+Requires Hive 0.10 which uses Thrift 0.9. Otherwise there are binary incompatibilities. 
 
-About 70% done. Still needs serialization support and predicate pushdown, plus a shit ton of testing. All the mistakes I made probably means it's more like 50%. 
-
-Right now it won't even compile. 
+I'm close to having basic rows returning from Accumulo, but for some reason the deserialize method is not getting fed AccumuloHiveRow. My goal is to get basic predicate pushdown to work. My first commit will not have serialization, even though I've started on those classes.
 
 Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
-
-Soon Neil will have a new shiny toy to dangle in front of Jonathan. 
