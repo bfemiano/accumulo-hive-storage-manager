@@ -24,7 +24,7 @@ public class LazyAccumuloRow extends LazyStruct{
     private List<String> fetchCols;
     private ArrayList<Object> cachedList = new ArrayList<Object>();
 
-    private static final Pattern COLON = Pattern.compile("[:]");
+    private static final Pattern PIPE = Pattern.compile("[|]");
     private static final Logger log = Logger.getLogger(LazyAccumuloRow.class);
 
     public LazyAccumuloRow(LazySimpleStructObjectInspector inspector) {
@@ -67,12 +67,11 @@ public class LazyAccumuloRow extends LazyStruct{
             getFieldInited()[id] = true;
             ByteArrayRef ref;
             String famQualPair = fetchCols.get(id);
-
             if(AccumuloSerde.isKeyField(famQualPair)) {
                 ref = new ByteArrayRef();
                 ref.setData(row.getRowId().getBytes());
             } else {
-                String[] famQualPieces = COLON.split(famQualPair);
+                String[] famQualPieces = PIPE.split(famQualPair);
                 if (famQualPieces.length != 2)
                     throw new IllegalArgumentException("Malformed famQualPair: " + famQualPair);
                 byte[] val = row.getValue(famQualPieces[0], famQualPieces[1]);

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results skipped="0" failed="0" total="5" passed="5">
+  <reporter-output>
+  </reporter-output>
+  <suite name="Command line suite" duration-ms="431" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+    <groups>
+    </groups>
+    <test name="Command line test" duration-ms="431" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+      <class name="AccumuloSerdeTest">
+        <test-method status="PASS" signature="deserialize()" name="deserialize" duration-ms="107" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+        </test-method>
+        <test-method status="PASS" signature="initialize()" name="initialize" duration-ms="1" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+        </test-method>
+        <test-method status="PASS" signature="invalidColMapping()" name="invalidColMapping" duration-ms="17" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+        </test-method>
+        <test-method status="PASS" signature="withRowID()" name="withRowID" duration-ms="17" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+        </test-method>
+      </class>
+      <class name="HiveAccumuloInputFormatTest">
+        <test-method status="PASS" signature="createMockKeyValues()" name="createMockKeyValues" is-config="true" duration-ms="231" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+        </test-method>
+        <test-method status="PASS" signature="getHiveAccumuloRecord()" name="getHiveAccumuloRecord" duration-ms="44" started-at="2013-03-31T23:10:42Z" finished-at="2013-03-31T23:10:42Z">
+        </test-method>
+      </class>
+    </test>
+  </suite>
+</testng-results>

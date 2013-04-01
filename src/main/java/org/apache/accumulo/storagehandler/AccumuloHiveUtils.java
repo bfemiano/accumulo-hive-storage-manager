@@ -7,6 +7,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: bfemiano
@@ -32,7 +33,11 @@ public class AccumuloHiveUtils {
         try {
             String table  = getFromConf(conf, AccumuloSerde.TABLE_NAME);
             Connector connector = getConnector(conf);
-            return connector.createBatchWriter(table, WRITER_MAX_MEMORY, WRITER_TIMEOUT, WRITER_NUM_THREADS);
+            BatchWriterConfig config = new BatchWriterConfig();
+            config.setMaxLatency(WRITER_TIMEOUT, TimeUnit.MILLISECONDS);
+            config.setMaxMemory(WRITER_MAX_MEMORY);
+            config.setMaxWriteThreads(WRITER_NUM_THREADS);
+            return connector.createBatchWriter(table,config);
         } catch (MissingArgumentException e){
             throw new IOException(StringUtils.stringifyException(e));
         } catch (TableNotFoundException e) {

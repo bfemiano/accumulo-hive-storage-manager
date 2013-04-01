@@ -1,9 +1,8 @@
 package org.apache.accumulo.storagehandler;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.Writable;
-import org.w3c.dom.Text;
+import org.apache.hadoop.thirdparty.guava.common.collect.Lists;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -60,6 +59,14 @@ public class AccumuloHiveRow implements Writable{
             dataOutput.writeInt(tuple.getValue().length);
             dataOutput.write(tuple.getValue());
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AccumuloHiveRow{" +
+                "rowId='" + rowId + '\'' +
+                ", tuples=" + tuples +
+                '}';
     }
 
     @Override

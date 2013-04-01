@@ -2,17 +2,19 @@ package org.apache.accumulo.storagehandler;
 
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.admin.TableOperations;
-import org.apache.commons.cli.MissingArgumentException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.ql.metadata.DefaultStorageHandler;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
+import org.apache.hadoop.hive.ql.security.authorization.HiveAuthorizationProvider;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -26,15 +28,10 @@ import java.util.Properties;
  * Date: 7/10/12
  * Time: 1:37 AM
  */
-public class AccumuloStorageHandler extends DefaultStorageHandler
-        implements HiveMetaHook {
-    //TODO predicate pushdown.
-
+public class AccumuloStorageHandler
+        implements HiveStorageHandler,HiveMetaHook {
     private Configuration conf;
-
-    private TableOperations tableOpts;
     private Connector connector;
-    private ZooKeeperInstance instance;
 
     private static final Logger log = Logger.getLogger(AccumuloStorageHandler.class);
 
@@ -60,12 +57,15 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
         String tableName = tblProperties.getProperty(AccumuloSerde.TABLE_NAME);
         jobProps.put(AccumuloSerde.TABLE_NAME, tableName);
 
+        String rowId = tblProperties.getProperty(AccumuloSerde.ACCUMULO_KEY_MAPPING);
+        jobProps.put(AccumuloSerde.ACCUMULO_KEY_MAPPING, rowId);
+
     }
 
     private String getTableName(Table table) throws MetaException{
-        String tableName = table.getParameters().get(AccumuloSerde.TABLE_NAME);
+        String tableName = table.getSd().getSerdeInfo().getParameters().get(AccumuloSerde.TABLE_NAME);
         if (tableName == null)   {
-            throw new MetaException("Please specify table name in TBLPROPERTIES");
+            throw new MetaException("Please specify " + AccumuloSerde.TABLE_NAME + " in TBLPROPERTIES");
         }
         return tableName;
     }
@@ -91,8 +91,32 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
     }
 
     @Override
+    public HiveAuthorizationProvider getAuthorizationProvider() throws HiveException {
+        return null;
+    }
+
+    @Override
+    public void configureInputJobProperties(TableDesc tableDesc, Map<String, String> properties) {
+        Properties props = tableDesc.getProperties();
+        properties.put(AccumuloSerde.COLUMN_MAPPINGS,
+                props.getProperty(AccumuloSerde.COLUMN_MAPPINGS));
+        properties.put(AccumuloSerde.TABLE_NAME,
+                props.getProperty(AccumuloSerde.TABLE_NAME));
+    }
+
+    @Override
+    public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> stringStringMap) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public Class<? extends InputFormat> getInputFormatClass() {
         return HiveAccumuloTableInputFormat.class;
+    }
+
+    @Override
+    public Class<? extends OutputFormat> getOutputFormatClass() {
+        return HiveAccumuloTableOutputFormat.class;
     }
 
 
@@ -100,26 +124,21 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
     public void preCreateTable(Table table) throws MetaException {
         boolean isExternal = MetaStoreUtils.isExternalTable(table);
         if (table.getSd().getLocation() != null){
-            throw new MetaException("Location may not be specified for Accumulo");
+            throw new MetaException("Location can't be specified for Accumulo");
         }
         try {
             String tblName = getTableName(table);
             Connector connector = getConnector(table.getParameters());
             TableOperations tableOpts = connector.tableOperations();
-            Map<String, String> serdeParams = table.getSd().getParameters();
+            Map<String, String> serdeParams = table.getSd().getSerdeInfo().getParameters();
             String columnMapping = serdeParams.get(AccumuloSerde.COLUMN_MAPPINGS);
             if (columnMapping == null)
                 throw new MetaException(AccumuloSerde.COLUMN_MAPPINGS + " missing from SERDEPROPERTIES");
-            //TODO: Parse within Serde, for now just hardcode it for testing.
-            // since it supports blank table creates.
             List<String> colQualFamPairs = AccumuloSerde.parseColumnMapping(columnMapping);
             if (!tableOpts.exists(tblName)) {
                 if(!isExternal) {
                     tableOpts.create(tblName);
                     tableOpts.online(tblName);
-//                    BatchWriter writer = connector.createBatchWriter(tblName, WRITER_MAX_MEMORY, WRITER_TIMEOUT, WRITER_NUM_THREADS);
-//                    Mutation m = new Mutation(fams.get(0));
-//                    m.put(new Text(fams.get(0)), new Text(quals.get(0)));
                 } else {
                     throw new MetaException("Accumulo table " + tblName + " doesn't existing even though declared external");
                 }
@@ -163,7 +182,7 @@ public class AccumuloStorageHandler extends DefaultStorageHandler
 
     @Override
     public void commitCreateTable(Table table) throws MetaException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        //do nothing
     }
 
     @Override

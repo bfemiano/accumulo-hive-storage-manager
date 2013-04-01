@@ -2,7 +2,7 @@
 
 dir
 0
-https://svn.apache.org/repos/asf/accumulo/trunk/contrib/hive-storage-handler
+https://svn.apache.org/repos/asf/accumulo/trunk/hive-storage-handler
 https://svn.apache.org/repos/asf
 add
 
@@ -12,7 +12,7 @@ add
 
 
 
-
+svn:special svn:externals svn:needs-lock
 
 
 
@@ -26,7 +26,14 @@ add
 
 13f79535-47bb-0310-9956-ffa450edef68
 
-accumulo_create_table.sql
+.git
+dir
+
+
+
+add
+
+README.md
 file
 
 
@@ -40,15 +47,15 @@ file
 
 add
 
-src
-dir
+hive-storage-handler.iml
+file
 
 
 
 add
 
-hive-storage-handler.iml
-file
+metastore_db
+dir
 
 
 
@@ -61,8 +68,15 @@ file
 
 add
 
-README.md
-file
+src
+dir
+
+
+
+add
+
+target
+dir
 
 
 
