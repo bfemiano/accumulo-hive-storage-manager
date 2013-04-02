@@ -1,0 +1,6 @@
+----------------------------------------------------------------
+2013-04-02 02:18:44.549 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.4.2.0 - (689064): instance a816c00e-013d-c88a-10c0-0000040f11d8
+on database directory /opt/cloud/hive-0.10.0/metastore_db  
+
+Database Class Loader started - derby.database.classpath=''
