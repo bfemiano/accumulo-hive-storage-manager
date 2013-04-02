@@ -1,9 +1,6 @@
 package org.apache.accumulo.storagehandler;
 
-<<<<<<< HEAD
 import com.google.common.collect.Lists;
-=======
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -15,10 +12,6 @@ import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.lazy.objectinspector.LazySimpleStructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.io.Writable;
-<<<<<<< HEAD
-=======
-import org.apache.hadoop.thirdparty.guava.common.collect.Lists;
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 import org.apache.log4j.Logger;
 
 import java.util.List;

@@ -15,13 +15,6 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.log4j.Logger;
 
 import org.testng.annotations.BeforeClass;
-<<<<<<< HEAD
-<<<<<<< HEAD
-import org.testng.annotations.BeforeTest;
-=======
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
-=======
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -52,15 +45,7 @@ public class HiveAccumuloInputFormatTest {
 
     private static final Logger log = Logger.getLogger(HiveAccumuloInputFormatTest.class);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    @BeforeTest
-=======
     @BeforeClass
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
-=======
-    @BeforeClass
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
     public void createMockKeyValues() {
         mockInstance =  new MockInstance(MOCK_INSTANCE_NAME);
         inputformat = new HiveAccumuloTableInputFormat();

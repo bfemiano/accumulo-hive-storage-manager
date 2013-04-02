@@ -20,3 +20,4 @@ WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'cf|f1',
 	'accumulo.table.name' = 'foo'); 
 
 select * from test_table;
+

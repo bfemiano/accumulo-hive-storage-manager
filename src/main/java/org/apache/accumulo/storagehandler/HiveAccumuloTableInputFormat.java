@@ -1,16 +1,10 @@
 package org.apache.accumulo.storagehandler;
 
-<<<<<<< HEAD
 import com.google.common.collect.Lists;
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.mapreduce.AccumuloInputFormat;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-=======
-import org.apache.accumulo.core.client.*;
-import org.apache.accumulo.core.client.mapreduce.AccumuloInputFormat;
-import org.apache.accumulo.core.client.mock.MockInstance;
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
@@ -27,17 +21,10 @@ import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-<<<<<<< HEAD
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-=======
-import org.apache.hadoop.thirdparty.guava.common.collect.Lists;
-import org.apache.hadoop.util.StringUtils;
-
-import java.io.IOException;
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -63,32 +50,14 @@ public class HiveAccumuloTableInputFormat
         String key = jobConf.get(AccumuloSerde.ACCUMULO_KEY_MAPPING);
         String zookeepers = jobConf.get(AccumuloSerde.ZOOKEEPERS);
         instance = getInstance(id, zookeepers);
-<<<<<<< HEAD
         Job job = new Job(jobConf);
         try {
             Connector connector =  instance.getConnector(user,  new PasswordToken(pass.getBytes()));
-=======
-        try {
-            Connector connector =  instance.getConnector(user,  pass.getBytes());
-            Authorizations auths = connector.securityOperations().getUserAuthorizations(user);
-            setInputInfo(jobConf, user, pass.getBytes(), tableName, auths);
-            if(instance instanceof MockInstance) {
-                setMockInstance(jobConf, id);
-            } else {
-                if(!inputConfigured(jobConf))
-                    setInputInfo(jobConf, user, pass.getBytes(), tableName, auths);
-                if(!instanceConfigured(jobConf))
-                    setZooKeeperInstance(jobConf, id, zookeepers);
-            }
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
             System.out.println("col mapping: " + colMapping);
             System.out.println("table name: " + tableName);
             System.out.println("key : " + key);
-<<<<<<< HEAD
             configure(job, connector);
-=======
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             List<String> colQualFamPairs;
             try {
                 colQualFamPairs = AccumuloSerde.parseColumnMapping(colMapping);
@@ -105,11 +74,7 @@ public class HiveAccumuloTableInputFormat
 
             fetchColumns(jobConf, getPairCollection(colQualFamPairs));
 
-<<<<<<< HEAD
 
-=======
-            Job job = new Job(jobConf);
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             JobContext context = new JobContext(job.getConfiguration(), job.getJobID());
             Path[] tablePaths = FileInputFormat.getInputPaths(context);
             List<org.apache.hadoop.mapreduce.InputSplit> splits = super.getSplits(job);
@@ -146,39 +111,17 @@ public class HiveAccumuloTableInputFormat
                                                                JobConf jobConf,
                                                                final Reporter reporter) throws IOException {
 
-<<<<<<< HEAD
 
         String user = jobConf.get(AccumuloSerde.USER_NAME);
         String pass = jobConf.get(AccumuloSerde.USER_PASS);
         String tableName = jobConf.get(AccumuloSerde.TABLE_NAME);
         String id = jobConf.get(AccumuloSerde.INSTANCE_ID);
-=======
-        String tableName = jobConf.get(AccumuloSerde.TABLE_NAME);
-        String id = jobConf.get(AccumuloSerde.INSTANCE_ID);
-        String user = jobConf.get(AccumuloSerde.USER_NAME);
-        String pass = jobConf.get(AccumuloSerde.USER_PASS);
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
         String zookeepers = jobConf.get(AccumuloSerde.ZOOKEEPERS);
         instance = getInstance(id, zookeepers);
         AccumuloSplit as = (AccumuloSplit)inputSplit;
         RangeInputSplit ris = as.getSplit();
-<<<<<<< HEAD
         Job job = new Job(jobConf);
         try {
-=======
-        try {
-
-            Connector connector = instance.getConnector(user, pass.getBytes());
-            Authorizations auths = connector.securityOperations().getUserAuthorizations(user);
-            if(instance instanceof MockInstance) {
-                setMockInstance(jobConf, id);
-            } else {
-                if(!inputConfigured(jobConf))
-                    setInputInfo(jobConf, user, pass.getBytes(), tableName, auths);
-                if(!instanceConfigured(jobConf))
-                    setZooKeeperInstance(jobConf, id, zookeepers);
-            }
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
             List<String> colQualFamPairs;
             try {
@@ -188,12 +131,9 @@ public class HiveAccumuloTableInputFormat
             }
 
             String key = jobConf.get(AccumuloSerde.ACCUMULO_KEY_MAPPING);
-<<<<<<< HEAD
             Connector connector = instance.getConnector(user, new PasswordToken(pass.getBytes()));
             configure(job, connector);
 
-=======
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
             int incForKey = key == null ? 0 : 1;
             if (colQualFamPairs.size() + incForKey < readColIds.size())
@@ -201,14 +141,8 @@ public class HiveAccumuloTableInputFormat
                         " numbers less than the hive table columns. (" + readColIds.size() + ") "  +
                         "Did you forget the serde property " + AccumuloSerde.ACCUMULO_KEY_MAPPING + "?");
 
-<<<<<<< HEAD
 
 
-=======
-            fetchColumns(jobConf, getPairCollection(colQualFamPairs));
-
-            Job job = new Job(jobConf);
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             TaskAttemptContext tac =
                     new TaskAttemptContext(job.getConfiguration(), new TaskAttemptID()) {
 
@@ -217,11 +151,7 @@ public class HiveAccumuloTableInputFormat
                             reporter.progress();;
                         }
                     };
-<<<<<<< HEAD
             fetchColumns(job, getPairCollection(colQualFamPairs));
-=======
-
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             final org.apache.hadoop.mapreduce.RecordReader
                     <Key,Value> recordReader =
                     createRecordReader(ris, tac);
@@ -229,12 +159,9 @@ public class HiveAccumuloTableInputFormat
 
             return new RecordReader<Text, AccumuloHiveRow>() {
 
-<<<<<<< HEAD
                 protected Text currentK;
                 protected AccumuloHiveRow currentV;
 
-=======
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
                 @Override
                 public void close() throws IOException {
                     recordReader.close();
@@ -278,7 +205,6 @@ public class HiveAccumuloTableInputFormat
                         rowKey.set(key.getRow());
 
                         value = new AccumuloHiveRow(key.getRow().toString());
-<<<<<<< HEAD
                         if(next) {
                             value.add(key.getColumnFamily().toString(),
                                     key.getColumnQualifier().toString(),
@@ -287,27 +213,11 @@ public class HiveAccumuloTableInputFormat
                             log.info("key.cf" + key.getColumnFamily().toString());
                             log.info("key.qf" + key.getColumnQualifier().toString());
                             log.info("getting row " + value.toString());
-=======
-                        while (key.getRow().equals(rowKey) && next) {
-                            value.add(key.getColumnFamily().toString(),
-                                    key.getColumnQualifier().toString(),
-                                    val.get());
-                            log.info("key.cf" + key.getColumnFamily().toString());
-                            log.info("key.qf" + key.getColumnQualifier().toString());
-                            log.info("getting row " + value.toString());
-                            next = recordReader.nextKeyValue();
-                            key = recordReader.getCurrentKey();
-                            val = recordReader.getCurrentValue();
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
                         }
                     } catch (InterruptedException e) {
                         throw new IOException(StringUtils.stringifyException(e));
                     }
-<<<<<<< HEAD
                     log.info("dont processing");
-=======
-
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
                     return next;
                 }
             };
@@ -321,7 +231,6 @@ public class HiveAccumuloTableInputFormat
         }
     }
 
-<<<<<<< HEAD
     private void configure(Job job, Connector connector)
             throws AccumuloSecurityException, AccumuloException {
         String instanceId = job.getConfiguration().get(AccumuloSerde.INSTANCE_ID);
@@ -340,8 +249,6 @@ public class HiveAccumuloTableInputFormat
 
     }
 
-=======
->>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
     private boolean inputConfigured(JobConf jobConf) {
         return jobConf.getBoolean(AccumuloInputFormat.class.getSimpleName() + ".configured", false);
     }
