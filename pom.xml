@@ -39,7 +39,11 @@
     <name>hive-storage-handler</name>
     <groupId>org.apache.accumulo</groupId>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <version>1.6.0-SNAPSHOT</version>
+=======
+    <version>1.5.0-SNAPSHOT</version>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
     <version>1.5.0-SNAPSHOT</version>
 >>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
@@ -51,7 +55,11 @@
                     <artifactId>maven-jar-plugin</artifactId>
                     <configuration>
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <outputDirectory>../../lib</outputDirectory>
+=======
+                        <outputDirectory>../lib</outputDirectory>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
                         <outputDirectory>../lib</outputDirectory>
 >>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
@@ -72,7 +80,11 @@
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-start</artifactId>
 <<<<<<< HEAD
+<<<<<<< HEAD
 			<version>1.6.0-SNAPSHOT</version>
+=======
+			<version>1.5.0-SNAPSHOT</version>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
 			<version>1.5.0-SNAPSHOT</version>
 >>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
@@ -81,7 +93,11 @@
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-core</artifactId>
 <<<<<<< HEAD
+<<<<<<< HEAD
 			<version>1.6.0-SNAPSHOT</version>
+=======
+			<version>1.5.0-SNAPSHOT</version>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
 			<version>1.5.0-SNAPSHOT</version>
 >>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
@@ -90,7 +106,11 @@
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-fate</artifactId>
 <<<<<<< HEAD
+<<<<<<< HEAD
 			<version>1.6.0-SNAPSHOT</version>
+=======
+			<version>1.5.0-SNAPSHOT</version>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
 			<version>1.5.0-SNAPSHOT</version>
 >>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
@@ -99,7 +119,11 @@
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-trace</artifactId>
 <<<<<<< HEAD
+<<<<<<< HEAD
 			<version>1.6.0-SNAPSHOT</version>
+=======
+			<version>1.5.0-SNAPSHOT</version>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
 			<version>1.5.0-SNAPSHOT</version>
 >>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
@@ -108,7 +132,12 @@
 	        <groupId>org.apache.hadoop</groupId>
 	        <artifactId>hadoop-core</artifactId>
 <<<<<<< HEAD
+<<<<<<< HEAD
 	        <version>1.0.4</version>
+=======
+	        <version>0.20.2-cdh3u5</version>
+	        <scope>provided</scope>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
 	        <version>0.20.2-cdh3u5</version>
 	        <scope>provided</scope>
@@ -118,7 +147,12 @@
 	        <groupId>org.apache.zookeeper</groupId>
 	        <artifactId>zookeeper</artifactId>
 <<<<<<< HEAD
+<<<<<<< HEAD
 	        <version>3.4.2</version>
+=======
+	        <version>3.3.5-cdh3u5</version>
+	        <scope>provided</scope>
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 =======
 	        <version>3.3.5-cdh3u5</version>
 	        <scope>provided</scope>
@@ -130,6 +164,7 @@
         </dependency>
         <dependency>
 <<<<<<< HEAD
+<<<<<<< HEAD
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
         </dependency>
@@ -139,6 +174,8 @@
 			<version>13.0</version>
 		</dependency>
 =======
+=======
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
         </dependency>
@@ -146,6 +183,9 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
         </dependency>
+<<<<<<< HEAD
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
+=======
 >>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
         <dependency>
             <groupId>org.slf4j</groupId>

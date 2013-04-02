@@ -1,0 +1,84 @@
+10
+
+dir
+0
+https://svn.apache.org/repos/asf/accumulo/trunk/hive-storage-handler
+https://svn.apache.org/repos/asf
+add
+
+
+
+
+
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+13f79535-47bb-0310-9956-ffa450edef68
+
+.git
+dir
+
+
+
+add
+
+README.md
+file
+
+
+
+add
+
+derby.log
+file
+
+
+
+add
+
+hive-storage-handler.iml
+file
+
+
+
+add
+
+metastore_db
+dir
+
+
+
+add
+
+pom.xml
+file
+
+
+
+add
+
+src
+dir
+
+
+
+add
+
+target
+dir
+
+
+
+add
+

@@ -1,8 +1,14 @@
 package org.apache.accumulo.storagehandler;
 
+<<<<<<< HEAD
 import com.google.common.collect.Lists;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.Writable;
+=======
+import org.apache.hadoop.hive.serde2.SerDeException;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.thirdparty.guava.common.collect.Lists;
+>>>>>>> 4f6e14e44cc5e3899403b947faa0d8b19b686f1f
 
 import java.io.DataInput;
 import java.io.DataOutput;
