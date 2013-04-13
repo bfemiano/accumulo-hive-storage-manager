@@ -27,6 +27,10 @@ public class AccumuloHiveRow implements Writable{
         this.rowId = rowId;
     }
 
+    public void setRowId(String rowId) {
+        this.rowId = rowId;
+    }
+
     public boolean hasFamAndQual(String fam, String qual) {
         for (ColumnTuple tuple : tuples) {
             if(tuple.getCf().equals(fam) && tuple.getQual().equals(qual)){

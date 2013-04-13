@@ -2,6 +2,7 @@ package org.apache.accumulo.storagehandler;
 
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.impl.Writer;
+import org.apache.accumulo.core.data.Mutation;
 import org.apache.commons.cli.MissingArgumentException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.StringUtils;
@@ -19,7 +20,6 @@ public class AccumuloHiveUtils {
     public static final long WRITER_MAX_MEMORY = 1000000L; // bytes to store before sending a batch
     public static final long WRITER_TIMEOUT = 1000L; // milliseconds to wait before sending
     public static final int WRITER_NUM_THREADS = 10;
-
     public static String getFromConf(Configuration conf, String property)
             throws MissingArgumentException {
         String propValue = conf.get(property);

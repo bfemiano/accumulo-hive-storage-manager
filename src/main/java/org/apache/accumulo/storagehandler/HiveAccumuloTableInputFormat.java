@@ -204,8 +204,9 @@ public class HiveAccumuloTableInputFormat
                         Value val = recordReader.getCurrentValue();
                         rowKey.set(key.getRow());
 
-                        value = new AccumuloHiveRow(key.getRow().toString());
+                        //value = new AccumuloHiveRow(key.getRow().toString());
                         if(next) {
+                            value.setRowId(key.getRow().toString());
                             value.add(key.getColumnFamily().toString(),
                                     key.getColumnQualifier().toString(),
                                     val.get());
@@ -217,7 +218,7 @@ public class HiveAccumuloTableInputFormat
                     } catch (InterruptedException e) {
                         throw new IOException(StringUtils.stringifyException(e));
                     }
-                    log.info("dont processing");
+                    log.info("done processing");
                     return next;
                 }
             };

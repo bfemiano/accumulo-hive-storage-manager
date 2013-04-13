@@ -12,6 +12,7 @@ import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.lazy.objectinspector.LazySimpleStructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.io.Writable;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -43,6 +44,10 @@ public class AccumuloSerde implements SerDe {
     private boolean[] needsEscape;
 
     private static final Logger log = Logger.getLogger(AccumuloSerde.class);
+    static {
+        log.setLevel(Level.INFO);
+    }
+
     private static final Pattern COMMA = Pattern.compile("[,]");
 
     private ObjectInspector cachedObjectInspector;
@@ -95,7 +100,7 @@ public class AccumuloSerde implements SerDe {
             colMapping = colMapping + "," + key;
             conf.set(ACCUMULO_KEY_MAPPING, rowIdMapping);
         }
-        properties.setProperty(serdeConstants.LIST_COLUMNS, colMapping);
+        //properties.setProperty(serdeConstants.LIST_COLUMNS, colMapping);
         if (colTypeProperty == null) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < fetchCols.size(); i++) {
@@ -143,11 +148,12 @@ public class AccumuloSerde implements SerDe {
             throw new SerDeException(getClass().getName() + " : " +
                     "Expects AccumuloHiveRow. Got " + writable.getClass().getName());
         }
-        if(log.isInfoEnabled())
-            log.info("Got accumulo row.");
+        log.info(((AccumuloHiveRow)writable).toString());
+        log.info("Got accumulo row.");
 
         cachedRow.init((AccumuloHiveRow)writable, fetchCols);
         return cachedRow;
+        //return null;
     }
 
     public ObjectInspector getObjectInspector() throws SerDeException {
