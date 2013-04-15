@@ -10,7 +10,7 @@ Requires Hive 0.10 and Accumulo 1.5+ which both use Thrift 0.9. Otherwise there 
 Setup:
 =================
 
-Before you can build this storage handler, checkout and build Accumulo from the latest source. svn co https://svn.apache.org/repos/asf/accumulo/trunk/ <code>mvn clean install</code> to get 1.6.0 installed in your local repo. This will
+Before you can build this storage handler, checkout and build Accumulo from the latest source. <code>svn co https://svn.apache.org/repos/asf/accumulo/trunk/</code> then <code>mvn clean install</code> to get 1.6.0 installed in your local repo. This will
 have to do until Accumulo 1.5+ is hosted in maven central.
 
 See [create.sh](src/test/hql/create.sh) for how to initialize required Accumulo parameters. 
