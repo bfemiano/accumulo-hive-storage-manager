@@ -14,18 +14,16 @@ Before you can build this storage handler, checkout and build Accumulo from the 
 have to do until Accumulo 1.5+ is hosted in maven central.
 
 See [create.sh](src/test/hql/create.sh) for how to initialize required Accumulo parameters. 
-See [accumulo_create_table.sql](src/test/hql/accumulo_create_table.sql) for example syntax. The number of hive columns in table definition must be equal to accumulo.column.mapping + accumulo.rowid.mapping (if present). 
-
-There are a dozen or so jars that need to be added. CREATE EXTERNAL TABLE is the only example provided. 
+See [accumulo_create_table.sql](src/test/hql/accumulo_create_table.sql) for CREATE EXTERNAL TABLE example and required aux jars. The number of hive columns in table definition must be equal to accumulo.column.mapping + accumulo.rowid.mapping (if present). 
 
 TODO: 
 ====================
 
-*   Behaves oddly with key/value pairs with heterogeneous column families. I'm looking into this more.   
+*   Behaves oddly with table definitions involving key/value pairs with heterogeneous column families. I'm looking into this more.   
 
 *	Output to Accumulo from Hive. The OutputFormat has not yet been wired into the Serde for field serialization to Accumulo.
 
-*	Simple Predictate pushdown to iterators.
+*	Simple Predicate pushdown to iterators.
 
 *	More testing with joins. 
 
