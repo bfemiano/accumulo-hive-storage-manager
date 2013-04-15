@@ -7,7 +7,6 @@ import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.core.util.Pair;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
@@ -24,7 +23,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -36,7 +34,7 @@ import java.util.regex.Pattern;
  */
 public class HiveAccumuloTableInputFormat
         extends AccumuloInputFormat
-        implements org.apache.hadoop.mapred.InputFormat<Text, AccumuloHiveRow> {
+        implements org.apache.hadoop.mapred.InputFormat<Text, HiveKeyValue> {
     private static final Pattern PIPE = Pattern.compile("[|]");
 
     private Instance instance;
@@ -47,32 +45,29 @@ public class HiveAccumuloTableInputFormat
         String id = jobConf.get(AccumuloSerde.INSTANCE_ID);
         String user = jobConf.get(AccumuloSerde.USER_NAME);
         String pass = jobConf.get(AccumuloSerde.USER_PASS);
-        String key = jobConf.get(AccumuloSerde.ACCUMULO_KEY_MAPPING);
+        String key = jobConf.get(AccumuloSerde.ACCUMULO_ROWID_MAPPING);
         String zookeepers = jobConf.get(AccumuloSerde.ZOOKEEPERS);
         instance = getInstance(id, zookeepers);
         Job job = new Job(jobConf);
         try {
             Connector connector =  instance.getConnector(user,  new PasswordToken(pass.getBytes()));
             String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
-            System.out.println("col mapping: " + colMapping);
-            System.out.println("table name: " + tableName);
-            System.out.println("key : " + key);
-            configure(job, connector);
+            log.info("col mapping: " + colMapping);
+            log.info("table name: " + tableName);
+            log.info("key : " + key);
             List<String> colQualFamPairs;
             try {
                 colQualFamPairs = AccumuloSerde.parseColumnMapping(colMapping);
             } catch (SerDeException e) {
                 throw new IOException(StringUtils.stringifyException(e));
             }
+            configure(job, connector, colQualFamPairs);
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
             int incForKey = key == null ? 0 : 1;
             if (colQualFamPairs.size() + incForKey < readColIds.size())
                 throw new IOException("Number of colfam:qual pairs + rowkey (" + (colQualFamPairs.size() + incForKey) + ")" +
                         " numbers less than the hive table columns. (" + readColIds.size() + ") "  +
-                        "Did you forget the serde property " + AccumuloSerde.ACCUMULO_KEY_MAPPING + "?");
-
-
-            fetchColumns(jobConf, getPairCollection(colQualFamPairs));
+                        "Did you forget the serde property " + AccumuloSerde.ACCUMULO_ROWID_MAPPING + "?");
 
 
             JobContext context = new JobContext(job.getConfiguration(), job.getJobID());
@@ -107,9 +102,9 @@ public class HiveAccumuloTableInputFormat
     }
 
     @Override
-    public RecordReader<Text, AccumuloHiveRow> getRecordReader(InputSplit inputSplit,
-                                                               JobConf jobConf,
-                                                               final Reporter reporter) throws IOException {
+    public RecordReader<Text, HiveKeyValue> getRecordReader(InputSplit inputSplit,
+                                                            JobConf jobConf,
+                                                            final Reporter reporter) throws IOException {
 
 
         String user = jobConf.get(AccumuloSerde.USER_NAME);
@@ -130,20 +125,20 @@ public class HiveAccumuloTableInputFormat
                 throw new IOException(StringUtils.stringifyException(e));
             }
 
-            String key = jobConf.get(AccumuloSerde.ACCUMULO_KEY_MAPPING);
+            String key = jobConf.get(AccumuloSerde.ACCUMULO_ROWID_MAPPING);
             Connector connector = instance.getConnector(user, new PasswordToken(pass.getBytes()));
-            configure(job, connector);
+            configure(job, connector, colQualFamPairs);
 
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
             int incForKey = key == null ? 0 : 1;
             if (colQualFamPairs.size() + incForKey < readColIds.size())
                 throw new IOException("Number of colfam:qual pairs + rowkey (" + (colQualFamPairs.size() + incForKey) + ")" +
                         " numbers less than the hive table columns. (" + readColIds.size() + ") "  +
-                        "Did you forget the serde property " + AccumuloSerde.ACCUMULO_KEY_MAPPING + "?");
+                        "Did you forget the serde property " + AccumuloSerde.ACCUMULO_ROWID_MAPPING + "?");
 
 
 
-            TaskAttemptContext tac =
+            final TaskAttemptContext tac =
                     new TaskAttemptContext(job.getConfiguration(), new TaskAttemptID()) {
 
                         @Override
@@ -151,16 +146,15 @@ public class HiveAccumuloTableInputFormat
                             reporter.progress();;
                         }
                     };
-            fetchColumns(job, getPairCollection(colQualFamPairs));
             final org.apache.hadoop.mapreduce.RecordReader
                     <Key,Value> recordReader =
                     createRecordReader(ris, tac);
             recordReader.initialize(ris, tac);
 
-            return new RecordReader<Text, AccumuloHiveRow>() {
+            return new RecordReader<Text, HiveKeyValue>() {
 
                 protected Text currentK;
-                protected AccumuloHiveRow currentV;
+                protected HiveKeyValue currentV;
 
                 @Override
                 public void close() throws IOException {
@@ -173,8 +167,8 @@ public class HiveAccumuloTableInputFormat
                 }
 
                 @Override
-                public AccumuloHiveRow createValue() {
-                    return new AccumuloHiveRow();
+                public HiveKeyValue createValue() {
+                    return new HiveKeyValue();
                 }
 
                 @Override
@@ -196,24 +190,17 @@ public class HiveAccumuloTableInputFormat
                 }
 
                 @Override
-                public boolean next(Text rowKey, AccumuloHiveRow value) throws IOException {
+                public boolean next(Text rowKey, HiveKeyValue value) throws IOException {
                     boolean next;
                     try {
                         next = recordReader.nextKeyValue();
                         Key key = recordReader.getCurrentKey();
                         Value val = recordReader.getCurrentValue();
-                        rowKey.set(key.getRow());
-
-                        //value = new AccumuloHiveRow(key.getRow().toString());
                         if(next) {
+                            rowKey.set(key.getRow());
                             value.setRowId(key.getRow().toString());
-                            value.add(key.getColumnFamily().toString(),
-                                    key.getColumnQualifier().toString(),
-                                    val.get());
-
-                            log.info("key.cf" + key.getColumnFamily().toString());
-                            log.info("key.qf" + key.getColumnQualifier().toString());
-                            log.info("getting row " + value.toString());
+                            value.setQual(key.getColumnQualifier().toString());
+                            value.setVal(val.get());
                         }
                     } catch (InterruptedException e) {
                         throw new IOException(StringUtils.stringifyException(e));
@@ -232,7 +219,7 @@ public class HiveAccumuloTableInputFormat
         }
     }
 
-    private void configure(Job job, Connector connector)
+    private void configure(Job job, Connector connector, List<String> colQualFamPairs)
             throws AccumuloSecurityException, AccumuloException {
         String instanceId = job.getConfiguration().get(AccumuloSerde.INSTANCE_ID);
         String zookeepers = job.getConfiguration().get(AccumuloSerde.ZOOKEEPERS);
@@ -247,15 +234,7 @@ public class HiveAccumuloTableInputFormat
         setConnectorInfo(job, user, new PasswordToken(pass.getBytes()));
         setInputTableName(job, tableName);
         setScanAuthorizations(job, connector.securityOperations().getUserAuthorizations(user));
-
-    }
-
-    private boolean inputConfigured(JobConf jobConf) {
-        return jobConf.getBoolean(AccumuloInputFormat.class.getSimpleName() + ".configured", false);
-    }
-
-    private boolean instanceConfigured(JobConf jobConf) {
-        return jobConf.getBoolean(AccumuloInputFormat.class.getSimpleName() + ".instanceConfigured", false);
+        fetchColumns(job, getPairCollection(colQualFamPairs));
     }
 
     private Collection<Pair<Text, Text>> getPairCollection(List<String> colQualFamPairs) {

@@ -31,7 +31,11 @@ public class AccumuloSerde implements SerDe {
     public static final String ZOOKEEPERS = "accumulo.zookeepers";
     public static final String INSTANCE_ID = "accumulo.instance.id";
     public static final String COLUMN_MAPPINGS = "accumulo.columns.mapping";
-    public static final String ACCUMULO_KEY_MAPPING = "accumulo.key.mapping";
+    public static final String ACCUMULO_ROWID_MAPPING = "accumulo.rowid.mapping";
+    public static final String MORE_ACCUMULO_THAN_HIVE = "You have too many hive columns defined for what is mapped in "
+            + COLUMN_MAPPINGS + " plus " + ACCUMULO_ROWID_MAPPING;
+    public static final String MORE_HIVE_THAN_ACCUMULO = "Is one column defined for the rowID and you forget the serde property "
+            + ACCUMULO_ROWID_MAPPING + "?";
     private static final String KEY = "key=";
     private LazySimpleSerDe.SerDeParameters serDeParameters;
     private LazyAccumuloRow cachedRow;
@@ -52,8 +56,8 @@ public class AccumuloSerde implements SerDe {
 
     private ObjectInspector cachedObjectInspector;
     //private static final String MAP_STRING_STRING_NAME = Constants.MAP_TYPE_NAME + "<" +
-            //Constants.STRING_TYPE_NAME + "," +
-            //Constants.STRING_TYPE_NAME + ">";
+    //Constants.STRING_TYPE_NAME + "," +
+    //Constants.STRING_TYPE_NAME + ">";
 
     public void initialize(Configuration conf, Properties properties) throws SerDeException {
         initAccumuloSerdeParameters(conf, properties);
@@ -70,7 +74,7 @@ public class AccumuloSerde implements SerDe {
         cachedRow = new LazyAccumuloRow((LazySimpleStructObjectInspector) cachedObjectInspector);
 
         if(log.isInfoEnabled()) {
-           log.info("Initialized with " + serDeParameters.getColumnNames() +
+            log.info("Initialized with " + serDeParameters.getColumnNames() +
                     " type: " + serDeParameters.getColumnTypes());
         }
     }
@@ -90,7 +94,7 @@ public class AccumuloSerde implements SerDe {
     private void initAccumuloSerdeParameters(Configuration conf, Properties properties)
             throws SerDeException{
         colMapping = properties.getProperty(COLUMN_MAPPINGS);
-        rowIdMapping = properties.getProperty(ACCUMULO_KEY_MAPPING);
+        rowIdMapping = properties.getProperty(ACCUMULO_ROWID_MAPPING);
         String colTypeProperty = properties.getProperty(serdeConstants.LIST_COLUMN_TYPES);
         String name = getClass().getName();
         fetchCols = parseColumnMapping(colMapping);
@@ -98,9 +102,9 @@ public class AccumuloSerde implements SerDe {
             String key = KEY + rowIdMapping;
             fetchCols.add(key);
             colMapping = colMapping + "," + key;
-            conf.set(ACCUMULO_KEY_MAPPING, rowIdMapping);
+            conf.set(ACCUMULO_ROWID_MAPPING, rowIdMapping);
         }
-        //properties.setProperty(serdeConstants.LIST_COLUMNS, colMapping);
+
         if (colTypeProperty == null) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < fetchCols.size(); i++) {
@@ -110,12 +114,13 @@ public class AccumuloSerde implements SerDe {
             builder.replace(indexOfLastColon, indexOfLastColon+1, "");
             properties.setProperty(serdeConstants.LIST_COLUMN_TYPES, builder.toString());
         }
+
         serDeParameters = LazySimpleSerDe.initSerdeParams(conf, properties, name);
         if (fetchCols.size() != serDeParameters.getColumnNames().size()) {
-            throw new SerDeException(name + ": columns has "
+            throw new SerDeException(name + ": Hive table definition has "
                     + serDeParameters.getColumnNames().size() +
-                    " elements while accumulo.column.mapping has " +
-                    fetchCols.size() + " elements. Did you forget the key column type?");
+                    " elements while " + COLUMN_MAPPINGS + " has " +
+                    fetchCols.size() + " elements. " + getHelp(fetchCols.size(), serDeParameters.getColumnNames().size()));
         }
         separators = serDeParameters.getSeparators();
         escaped = serDeParameters.isEscaped();
@@ -124,6 +129,15 @@ public class AccumuloSerde implements SerDe {
 
         if(log.isInfoEnabled())
             log.info("Serde initialized successfully for column mapping: " + colMapping);
+    }
+
+    private String getHelp(int accumuloColumns, int hiveColumns) {
+
+        if(accumuloColumns < hiveColumns) {
+            return MORE_HIVE_THAN_ACCUMULO;
+        } else {
+            return MORE_ACCUMULO_THAN_HIVE;
+        }
     }
 
     public static List<String> parseColumnMapping(String columnMapping)
@@ -140,18 +154,17 @@ public class AccumuloSerde implements SerDe {
 
     public Writable serialize(Object o, ObjectInspector objectInspector)
             throws SerDeException {
-         throw new UnsupportedOperationException("Serialization to Accumulo not yet supported");
+        throw new UnsupportedOperationException("Serialization to Accumulo not yet supported");
     }
 
     public Object deserialize(Writable writable) throws SerDeException {
-        if(!(writable instanceof AccumuloHiveRow)) {
+        if(!(writable instanceof HiveKeyValue)) {
             throw new SerDeException(getClass().getName() + " : " +
-                    "Expects AccumuloHiveRow. Got " + writable.getClass().getName());
+                    "Expects HiveKeyValue. Got " + writable.getClass().getName());
         }
-        log.info(((AccumuloHiveRow)writable).toString());
-        log.info("Got accumulo row.");
+        log.info(((HiveKeyValue)writable).toString());
 
-        cachedRow.init((AccumuloHiveRow)writable, fetchCols);
+        cachedRow.init((HiveKeyValue)writable, fetchCols);
         return cachedRow;
         //return null;
     }
@@ -161,6 +174,6 @@ public class AccumuloSerde implements SerDe {
     }
 
     public SerDeStats getSerDeStats() {
-        throw new UnsupportedOperationException("Stats for AccumuloSerde not yet supported.");
+        throw new UnsupportedOperationException("Stats not yet supported.");
     }
 }

@@ -1,18 +1,32 @@
-accumulo-hive-storage-manager
+Accumulo-hive-storage-manager
 =============================
+
+Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
 
 Manage your Accumulo tables through the Hive metastore, and issue queries directly over the underlying column familes and qualifiers. 
 
-Requires Hive 0.10 which uses Thrift 0.9. Otherwise there are binary incompatibilities. 
+Requires Hive 0.10 and Accumulo 1.5+ which both use Thrift 0.9. Otherwise there are binary incompatibilities. 
 
-Requires Accumulo 1.5 or later (with Authenticators). 
+Setup:
+=================
 
-Progress
+Build Accumulo from the latest checkout and <code>mvn clean install</code> to get 1.6.0 installed in your local repo, then you can build this module. This will
+have to do until Accumulo 1.5+ is hosted in maven central.
+
+See src/test/hql/create.sh for how to initialize required Accumulo parameters. 
+See src/test/hql/accumulo_create_table.sql for example syntax.
+
+There are a dozen or so jars that need to be added. CREATE EXTERNAL TABLE is the only example provided. 
+
+TODO: 
 ====================
 
-Basic rowIDs and column qualifiers are returning as strings. The record reader logic is currently returning an AccumuloHiveRow for each key/value pair, which is
-incorrect. I'll fix this tomorrow. I also need to get basic Predictate pushdown working. 
+*	Output. HiveAccumuloOutputFormat has not yet been wired into the Serde for field serialization to Accumulo.
 
-One of the tests is broken until I fix the record reader. In the meantime, use -Dmaven.test.skip.
+*	Simple Predictate pushdown to iterators.
 
-Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
+*	More testing with joins. 
+
+*	Statistics
+
+

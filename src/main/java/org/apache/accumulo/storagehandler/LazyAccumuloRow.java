@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  */
 public class LazyAccumuloRow extends LazyStruct{
 
-    private AccumuloHiveRow row;
+    private HiveKeyValue row;
     private List<String> fetchCols;
     private ArrayList<Object> cachedList = new ArrayList<Object>();
 
@@ -31,7 +31,7 @@ public class LazyAccumuloRow extends LazyStruct{
         super(inspector);
     }
 
-    public void init(AccumuloHiveRow hiveRow, List<String> fetchCols) {
+    public void init(HiveKeyValue hiveRow, List<String> fetchCols) {
         this.row = hiveRow;
         this.fetchCols = fetchCols;
         setParsed(false);
@@ -74,7 +74,7 @@ public class LazyAccumuloRow extends LazyStruct{
                 String[] famQualPieces = PIPE.split(famQualPair);
                 if (famQualPieces.length != 2)
                     throw new IllegalArgumentException("Malformed famQualPair: " + famQualPair);
-                byte[] val = row.getValue(famQualPieces[0], famQualPieces[1]);
+                byte[] val = row.getVal();
                 if (val == null){
                     return null;
                 } else {

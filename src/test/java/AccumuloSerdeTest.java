@@ -1,14 +1,14 @@
-import org.apache.accumulo.storagehandler.AccumuloHiveRow;
+import org.apache.accumulo.storagehandler.HiveKeyValue;
 import org.apache.accumulo.storagehandler.AccumuloSerde;
 import org.apache.accumulo.storagehandler.LazyAccumuloRow;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import static org.testng.Assert.*;
 
 import org.apache.hadoop.hive.serde2.lazy.LazyString;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.Properties;
@@ -25,6 +25,62 @@ public class AccumuloSerdeTest {
     private static final Logger log = Logger.getLogger(AccumuloSerdeTest.class);
 
     @Test
+    public void columnMismatch() {
+        Properties properties = new Properties();
+        Configuration conf = new Configuration();
+        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f3");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3,field4");
+        properties.setProperty(serdeConstants.LIST_COLUMN_TYPES, "string:string:string:string");
+
+        try {
+            serde.initialize(conf, properties);
+            serde.deserialize(new Text("fail"));
+            fail("Should fail. More hive columns than total Accumulo mapping");
+        } catch (SerDeException e) {
+            assertTrue(e.getMessage().contains(AccumuloSerde.MORE_HIVE_THAN_ACCUMULO));
+        }
+
+        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2");
+        properties.setProperty(serdeConstants.LIST_COLUMN_TYPES, "string:string");
+        try {
+            serde.initialize(conf, properties);
+            serde.deserialize(new Text("fail"));
+            fail("Should fail, More Accumulo mapping than total hive columns.");
+        } catch (SerDeException e) {
+            assertTrue(e.getMessage().contains(AccumuloSerde.MORE_ACCUMULO_THAN_HIVE));
+        }
+    }
+
+    @Test
+    public void withOrWithoutRowID() {
+        Properties properties = new Properties();
+        Configuration conf = new Configuration();
+        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2");
+
+        try {
+            serde.initialize(conf, properties);
+        } catch (SerDeException e) {
+            fail(e.getMessage());
+        }
+
+        properties = new Properties();
+        conf = new Configuration();
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2");
+
+        try {
+            serde.initialize(conf, properties);
+        } catch (SerDeException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
     public void initialize() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
@@ -36,6 +92,7 @@ public class AccumuloSerdeTest {
         }
 
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3");
         try {
             serde.initialize(conf, properties);
             assertNotNull(serde.getCachedRow());
@@ -50,7 +107,8 @@ public class AccumuloSerdeTest {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
-        properties.setProperty(AccumuloSerde.ACCUMULO_KEY_MAPPING, "key");
+        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "key");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3,field4");
         try {
             serde.initialize(conf, properties);
             assertNotNull(serde.getCachedRow());
@@ -64,15 +122,16 @@ public class AccumuloSerdeTest {
     public void invalidColMapping() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
-        properties.setProperty(AccumuloSerde.ACCUMULO_KEY_MAPPING, "blah");
+        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf,cf|f2,cf|f3");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3,field4");
 
         try {
             serde.initialize(conf, properties);
-            AccumuloHiveRow row = new AccumuloHiveRow("r1");
-            row.add("cf", "f1", "v1".getBytes());
-            row.add("cf", "f2", "v2".getBytes());
-            row.add("cf", "f3", "v3".getBytes());
+            HiveKeyValue row = new HiveKeyValue();
+            row.setRowId("r1");
+            row.setQual("f1");
+            row.setVal("v1".getBytes());
             Object obj = serde.deserialize(row);
             assertTrue(obj instanceof LazyAccumuloRow);
             LazyAccumuloRow lazyRow = (LazyAccumuloRow)obj;
@@ -90,41 +149,44 @@ public class AccumuloSerdeTest {
     public void deserialize() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
-        properties.setProperty(AccumuloSerde.ACCUMULO_KEY_MAPPING, "blah");
+        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
 
         try {
             serde.initialize(conf, properties);
             serde.deserialize(new Text("fail"));
-            fail("Not instance of AccumuloHiveRow");
+            fail("Not instance of HiveKeyValue");
         } catch (SerDeException e) {
-            assertTrue(e.getMessage().contains("Expects AccumuloHiveRow"));
+            assertTrue(e.getMessage().contains("columns has 0 elements while columns.types has 4"));
         }
 
+
+
         try {
-            AccumuloHiveRow row = new AccumuloHiveRow("r1");
-            row.add("cf", "f1", "v1".getBytes());
-            row.add("cf", "f2", "v2".getBytes());
-            row.add("cf", "f3", "v3".getBytes());
+            properties.setProperty(serdeConstants.LIST_COLUMNS, "blah,field2,field3,field4");
+            serde.initialize(conf, properties);
+            assertTrue(AccumuloSerde.isKeyField("key=blah"));
+
+            HiveKeyValue row = new HiveKeyValue();
+            row.setRowId("r1");
+            row.setQual("f1");
+            row.setVal("v1".getBytes());
             Object obj = serde.deserialize(row);
             assertTrue(obj instanceof LazyAccumuloRow);
             LazyAccumuloRow lazyRow = (LazyAccumuloRow)obj;
-
             Object field0 = lazyRow.getField(0);
             assertTrue(field0 instanceof LazyString);
             assertEquals(field0.toString(), "v1");
 
-            Object field1 = lazyRow.getField(1);
+            row.setRowId("r2");
+            row.setQual("f1");
+            row.setVal("v2".getBytes());
+            obj = serde.deserialize(row);
+            assertTrue(obj instanceof LazyAccumuloRow);
+            lazyRow = (LazyAccumuloRow)obj;
+            Object field1 = lazyRow.getField(0);
             assertTrue(field1 instanceof LazyString);
             assertEquals(field1.toString(), "v2");
-
-            Object field2 = lazyRow.getField(2);
-            assertTrue(field2 instanceof LazyString);
-            assertEquals(field2.toString(), "v3");
-
-            Object field3= lazyRow.getField(3);
-            assertTrue(field3 instanceof LazyString);
-            assertEquals(field3.toString(), "r1");
 
         } catch (SerDeException e){
             log.error(e);

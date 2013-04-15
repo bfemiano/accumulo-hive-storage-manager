@@ -57,8 +57,8 @@ public class AccumuloStorageHandler
         String tableName = tblProperties.getProperty(AccumuloSerde.TABLE_NAME);
         jobProps.put(AccumuloSerde.TABLE_NAME, tableName);
 
-        String rowId = tblProperties.getProperty(AccumuloSerde.ACCUMULO_KEY_MAPPING);
-        jobProps.put(AccumuloSerde.ACCUMULO_KEY_MAPPING, rowId);
+        String rowId = tblProperties.getProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING);
+        jobProps.put(AccumuloSerde.ACCUMULO_ROWID_MAPPING, rowId);
 
     }
 
