@@ -3,11 +3,13 @@ package org.apache.accumulo.storagehandler;
 import com.google.common.collect.Lists;
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.mapreduce.AccumuloInputFormat;
+import org.apache.accumulo.core.client.mapreduce.AccumuloRowInputFormat;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.util.Pair;
+import org.apache.accumulo.core.util.PeekingIterator;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -25,6 +27,7 @@ import org.apache.hadoop.util.StringUtils;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -33,8 +36,8 @@ import java.util.regex.Pattern;
  * Time: 2:43 AM
  */
 public class HiveAccumuloTableInputFormat
-        extends AccumuloInputFormat
-        implements org.apache.hadoop.mapred.InputFormat<Text, HiveKeyValue> {
+        extends AccumuloRowInputFormat
+        implements org.apache.hadoop.mapred.InputFormat<Text, AccumuloHiveRow> {
     private static final Pattern PIPE = Pattern.compile("[|]");
 
     private Instance instance;
@@ -102,9 +105,9 @@ public class HiveAccumuloTableInputFormat
     }
 
     @Override
-    public RecordReader<Text, HiveKeyValue> getRecordReader(InputSplit inputSplit,
-                                                            JobConf jobConf,
-                                                            final Reporter reporter) throws IOException {
+    public RecordReader<Text, AccumuloHiveRow> getRecordReader(InputSplit inputSplit,
+                                                               JobConf jobConf,
+                                                               final Reporter reporter) throws IOException {
 
 
         String user = jobConf.get(AccumuloSerde.USER_NAME);
@@ -147,14 +150,14 @@ public class HiveAccumuloTableInputFormat
                         }
                     };
             final org.apache.hadoop.mapreduce.RecordReader
-                    <Key,Value> recordReader =
+                    <Text,PeekingIterator<Map.Entry<Key,Value>>> recordReader =
                     createRecordReader(ris, tac);
             recordReader.initialize(ris, tac);
 
-            return new RecordReader<Text, HiveKeyValue>() {
+            return new RecordReader<Text, AccumuloHiveRow>() {
 
                 protected Text currentK;
-                protected HiveKeyValue currentV;
+                protected AccumuloHiveRow currentV;
 
                 @Override
                 public void close() throws IOException {
@@ -167,8 +170,8 @@ public class HiveAccumuloTableInputFormat
                 }
 
                 @Override
-                public HiveKeyValue createValue() {
-                    return new HiveKeyValue();
+                public AccumuloHiveRow createValue() {
+                    return new AccumuloHiveRow();
                 }
 
                 @Override
@@ -190,22 +193,27 @@ public class HiveAccumuloTableInputFormat
                 }
 
                 @Override
-                public boolean next(Text rowKey, HiveKeyValue value) throws IOException {
+                public boolean next(Text rowKey, AccumuloHiveRow value) throws IOException {
                     boolean next;
                     try {
+
                         next = recordReader.nextKeyValue();
-                        Key key = recordReader.getCurrentKey();
-                        Value val = recordReader.getCurrentValue();
+                        Text key = recordReader.getCurrentKey();
+                        PeekingIterator<Map.Entry<Key,Value>> iter = recordReader.getCurrentValue();
                         if(next) {
-                            rowKey.set(key.getRow());
-                            value.setRowId(key.getRow().toString());
-                            value.setQual(key.getColumnQualifier().toString());
-                            value.setVal(val.get());
+                            value.clear();
+                            value.setRowId(key.toString());
+                            while(iter.hasNext()) {
+                                Map.Entry<Key, Value> kv = iter.next();
+                                value.add(kv.getKey().getColumnFamily().toString(),
+                                        kv.getKey().getColumnQualifier().toString(),
+                                        kv.getValue().get());
+                            }
                         }
+
                     } catch (InterruptedException e) {
                         throw new IOException(StringUtils.stringifyException(e));
                     }
-                    log.info("done processing");
                     return next;
                 }
             };

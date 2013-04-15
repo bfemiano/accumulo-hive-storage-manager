@@ -15,11 +15,11 @@ add jar /Users/bfemiano/cloud/accumulo-trunk/trunk/lib/accumulo-start-1.6.0-SNAP
 add jar /Users/bfemiano/cloud/accumulo-trunk/trunk/lib/accumulo-hive-storage-handler-1.6.0-SNAPSHOT.jar;
 
 DROP TABLE IF EXISTS test_table;
-CREATE EXTERNAL TABLE test_table(rowId STRING, v1 STRING) 
+CREATE EXTERNAL TABLE test_table(rowId STRING, v1 STRING, v2 STRING) 
 STORED BY 'org.apache.accumulo.storagehandler.AccumuloStorageHandler' 
-WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'cf|f2', 
+WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'cf|f1,cf|f2', 
 	'accumulo.rowid.mapping' = 'rowId', 
 	'accumulo.table.name' = 'foo'); 
 
-select rowId,v1 from test_table;
+select * from test_table;
 

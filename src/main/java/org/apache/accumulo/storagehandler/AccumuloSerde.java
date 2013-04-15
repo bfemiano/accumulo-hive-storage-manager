@@ -158,13 +158,13 @@ public class AccumuloSerde implements SerDe {
     }
 
     public Object deserialize(Writable writable) throws SerDeException {
-        if(!(writable instanceof HiveKeyValue)) {
+        if(!(writable instanceof AccumuloHiveRow)) {
             throw new SerDeException(getClass().getName() + " : " +
-                    "Expects HiveKeyValue. Got " + writable.getClass().getName());
+                    "Expects AccumuloHiveRow. Got " + writable.getClass().getName());
         }
-        log.info(((HiveKeyValue)writable).toString());
+        log.info(((AccumuloHiveRow)writable).toString());
 
-        cachedRow.init((HiveKeyValue)writable, fetchCols);
+        cachedRow.init((AccumuloHiveRow)writable, fetchCols);
         return cachedRow;
         //return null;
     }

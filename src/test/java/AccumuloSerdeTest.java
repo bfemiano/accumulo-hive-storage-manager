@@ -1,4 +1,4 @@
-import org.apache.accumulo.storagehandler.HiveKeyValue;
+import org.apache.accumulo.storagehandler.AccumuloHiveRow;
 import org.apache.accumulo.storagehandler.AccumuloSerde;
 import org.apache.accumulo.storagehandler.LazyAccumuloRow;
 import org.apache.hadoop.conf.Configuration;
@@ -128,10 +128,8 @@ public class AccumuloSerdeTest {
 
         try {
             serde.initialize(conf, properties);
-            HiveKeyValue row = new HiveKeyValue();
+            AccumuloHiveRow row = new AccumuloHiveRow();
             row.setRowId("r1");
-            row.setQual("f1");
-            row.setVal("v1".getBytes());
             Object obj = serde.deserialize(row);
             assertTrue(obj instanceof LazyAccumuloRow);
             LazyAccumuloRow lazyRow = (LazyAccumuloRow)obj;
@@ -155,7 +153,7 @@ public class AccumuloSerdeTest {
         try {
             serde.initialize(conf, properties);
             serde.deserialize(new Text("fail"));
-            fail("Not instance of HiveKeyValue");
+            fail("Not instance of AccumuloHiveRow");
         } catch (SerDeException e) {
             assertTrue(e.getMessage().contains("columns has 0 elements while columns.types has 4"));
         }
@@ -167,24 +165,20 @@ public class AccumuloSerdeTest {
             serde.initialize(conf, properties);
             assertTrue(AccumuloSerde.isKeyField("key=blah"));
 
-            HiveKeyValue row = new HiveKeyValue();
+            AccumuloHiveRow row = new AccumuloHiveRow();
             row.setRowId("r1");
-            row.setQual("f1");
-            row.setVal("v1".getBytes());
+            row.add("cf", "f1", "v1".getBytes());
+            row.add("cf", "f2", "v2".getBytes());
+
             Object obj = serde.deserialize(row);
             assertTrue(obj instanceof LazyAccumuloRow);
+
             LazyAccumuloRow lazyRow = (LazyAccumuloRow)obj;
             Object field0 = lazyRow.getField(0);
             assertTrue(field0 instanceof LazyString);
             assertEquals(field0.toString(), "v1");
 
-            row.setRowId("r2");
-            row.setQual("f1");
-            row.setVal("v2".getBytes());
-            obj = serde.deserialize(row);
-            assertTrue(obj instanceof LazyAccumuloRow);
-            lazyRow = (LazyAccumuloRow)obj;
-            Object field1 = lazyRow.getField(0);
+            Object field1 = lazyRow.getField(1);
             assertTrue(field1 instanceof LazyString);
             assertEquals(field1.toString(), "v2");
 

@@ -3,7 +3,7 @@ import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.storagehandler.HiveKeyValue;
+import org.apache.accumulo.storagehandler.AccumuloHiveRow;
 import org.apache.accumulo.storagehandler.AccumuloSerde;
 import org.apache.accumulo.storagehandler.HiveAccumuloTableInputFormat;
 import org.apache.hadoop.fs.Path;
@@ -93,17 +93,17 @@ public class HiveAccumuloInputFormatTest {
         try {
             InputSplit[] splits = inputformat.getSplits(conf, 0);
             assertEquals(splits.length, 1);
-            RecordReader<Text,HiveKeyValue> reader = inputformat.getRecordReader(splits[0], conf, null);
+            RecordReader<Text,AccumuloHiveRow> reader = inputformat.getRecordReader(splits[0], conf, null);
             Text rowId = new Text("r1");
-            HiveKeyValue row = new HiveKeyValue();
+            AccumuloHiveRow row = new AccumuloHiveRow();
+            row.add(COLUMN_FAMILY.toString(), FIELD_1.toString(), "v1".getBytes());
+            row.add(COLUMN_FAMILY.toString(), FIELD_2.toString(), "v2".getBytes());
             assertTrue(reader.next(rowId, row));
             assertEquals(row.getRowId(), rowId.toString());
-            assertEquals(row.getQual(), FIELD_1.toString());
-            assertEquals(row.getVal(), "v1".getBytes());
-            assertTrue(reader.next(rowId, row));
-            assertEquals(row.getRowId(), rowId.toString());
-            assertEquals(row.getQual(), FIELD_2.toString());
-            assertEquals(row.getVal(), "v2".getBytes());
+            assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), FIELD_1.toString()));
+            assertEquals(row.getValue(COLUMN_FAMILY.toString(), FIELD_1.toString()), "v1".getBytes());
+            assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), FIELD_2.toString()));
+            assertEquals(row.getValue(COLUMN_FAMILY.toString(), FIELD_2.toString()), "v2".getBytes());
             assertFalse(reader.next(rowId, row));
 
         } catch (IOException e) {
@@ -120,13 +120,13 @@ public class HiveAccumuloInputFormatTest {
         try {
             InputSplit[] splits = inputformat.getSplits(conf, 0);
             assertEquals(splits.length, 1);
-            RecordReader<Text,HiveKeyValue> reader = inputformat.getRecordReader(splits[0], conf, null);
+            RecordReader<Text,AccumuloHiveRow> reader = inputformat.getRecordReader(splits[0], conf, null);
             Text rowId = new Text("r1");
-            HiveKeyValue row = new HiveKeyValue();
+            AccumuloHiveRow row = new AccumuloHiveRow();
             assertTrue(reader.next(rowId, row));
             assertEquals(row.getRowId(), rowId.toString());
-            assertEquals(row.getQual(), FIELD_1.toString());
-            assertEquals(row.getVal(), "v1".getBytes());
+            assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), FIELD_1.toString()));
+            assertEquals(row.getValue(COLUMN_FAMILY.toString(), FIELD_1.toString()), "v1".getBytes());
             assertFalse(reader.next(rowId, row));
         }catch (IOException e) {
             log.error(e);
@@ -142,9 +142,10 @@ public class HiveAccumuloInputFormatTest {
         try {
             InputSplit[] splits = inputformat.getSplits(conf, 0);
             assertEquals(splits.length, 1);
-            RecordReader<Text,HiveKeyValue> reader = inputformat.getRecordReader(splits[0], conf, null);
+            RecordReader<Text,AccumuloHiveRow> reader = inputformat.getRecordReader(splits[0], conf, null);
             Text rowId = new Text("r1");
-            HiveKeyValue row = new HiveKeyValue();
+            AccumuloHiveRow row = new AccumuloHiveRow();
+            row.setRowId("r1");
             assertFalse(reader.next(rowId, row));
         }catch (IOException e) {
             log.error(e);
