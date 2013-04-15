@@ -19,13 +19,13 @@ See [accumulo_create_table.sql](src/test/hql/accumulo_create_table.sql) for CREA
 TODO: 
 ====================
 
-*   Behaves oddly with table definitions involving key/value pairs with heterogeneous column families. I'm looking into this more.   
-
-*	Output to Accumulo from Hive. The OutputFormat has not yet been wired into the Serde for field serialization to Accumulo.
+*   Field IDs should not be based off accumulo.column.mapping ordering. This is wrong. 
 
 *	Simple Predicate pushdown to iterators.
 
-*	More testing with joins. 
+*	More testing with joins.
+
+*	Output to Accumulo from Hive. The OutputFormat has not yet been wired into the Serde for field serialization to Accumulo.
 
 *	Statistics
 
