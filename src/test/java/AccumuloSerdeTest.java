@@ -58,8 +58,7 @@ public class AccumuloSerdeTest {
     public void withOrWithoutRowID() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
-        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
-        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1");
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,rowID");
         properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2");
 
         try {
@@ -106,8 +105,7 @@ public class AccumuloSerdeTest {
     public void withRowID() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
-        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
-        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "key");
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,rowID,cf|f2,cf|f3");
         properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3,field4");
         try {
             serde.initialize(conf, properties);
@@ -122,9 +120,8 @@ public class AccumuloSerdeTest {
     public void invalidColMapping() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
-        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf,cf|f2,cf|f3");
-        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3,field4");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field2,field3,field4");
 
         try {
             serde.initialize(conf, properties);
@@ -147,8 +144,7 @@ public class AccumuloSerdeTest {
     public void deserialize() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
-        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
-        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "rowID,cf|f1,cf|f2,cf|f3");
 
         try {
             serde.initialize(conf, properties);
@@ -163,7 +159,7 @@ public class AccumuloSerdeTest {
         try {
             properties.setProperty(serdeConstants.LIST_COLUMNS, "blah,field2,field3,field4");
             serde.initialize(conf, properties);
-            assertTrue(AccumuloSerde.isKeyField("key=blah"));
+            assertTrue(AccumuloSerde.containsRowID("rowID"));
 
             AccumuloHiveRow row = new AccumuloHiveRow();
             row.setRowId("r1");
@@ -176,11 +172,15 @@ public class AccumuloSerdeTest {
             LazyAccumuloRow lazyRow = (LazyAccumuloRow)obj;
             Object field0 = lazyRow.getField(0);
             assertTrue(field0 instanceof LazyString);
-            assertEquals(field0.toString(), "v1");
+            assertEquals(field0.toString(), "r1");
 
             Object field1 = lazyRow.getField(1);
             assertTrue(field1 instanceof LazyString);
-            assertEquals(field1.toString(), "v2");
+            assertEquals(field1.toString(), "v1");
+
+            Object field2 = lazyRow.getField(2);
+            assertTrue(field2 instanceof LazyString);
+            assertEquals(field2.toString(), "v2");
 
         } catch (SerDeException e){
             log.error(e);

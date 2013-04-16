@@ -55,9 +55,6 @@ public class HiveAccumuloTableInputFormat
         try {
             Connector connector =  instance.getConnector(user,  new PasswordToken(pass.getBytes()));
             String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
-            log.info("col mapping: " + colMapping);
-            log.info("table name: " + tableName);
-            log.info("key : " + key);
             List<String> colQualFamPairs;
             try {
                 colQualFamPairs = AccumuloSerde.parseColumnMapping(colMapping);
@@ -112,7 +109,6 @@ public class HiveAccumuloTableInputFormat
 
         String user = jobConf.get(AccumuloSerde.USER_NAME);
         String pass = jobConf.get(AccumuloSerde.USER_PASS);
-        String tableName = jobConf.get(AccumuloSerde.TABLE_NAME);
         String id = jobConf.get(AccumuloSerde.INSTANCE_ID);
         String zookeepers = jobConf.get(AccumuloSerde.ZOOKEEPERS);
         instance = getInstance(id, zookeepers);
@@ -128,16 +124,14 @@ public class HiveAccumuloTableInputFormat
                 throw new IOException(StringUtils.stringifyException(e));
             }
 
-            String key = jobConf.get(AccumuloSerde.ACCUMULO_ROWID_MAPPING);
             Connector connector = instance.getConnector(user, new PasswordToken(pass.getBytes()));
             configure(job, connector, colQualFamPairs);
 
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
-            int incForKey = key == null ? 0 : 1;
-            if (colQualFamPairs.size() + incForKey < readColIds.size())
-                throw new IOException("Number of colfam:qual pairs + rowkey (" + (colQualFamPairs.size() + incForKey) + ")" +
-                        " numbers less than the hive table columns. (" + readColIds.size() + ") "  +
-                        "Did you forget the serde property " + AccumuloSerde.ACCUMULO_ROWID_MAPPING + "?");
+            int incForRowID = AccumuloSerde.containsRowID(colMapping) ? 1 : 0;
+            if (colQualFamPairs.size() + incForRowID < readColIds.size())
+                throw new IOException("Number of colfam:qual pairs + rowID (" + (colQualFamPairs.size() + incForRowID) + ")" +
+                        " numbers less than the hive table columns. (" + readColIds.size() + ")");
 
 
 
@@ -250,8 +244,9 @@ public class HiveAccumuloTableInputFormat
         for (String colQualFam : colQualFamPairs) {
             String[] qualFamPieces = PIPE.split(colQualFam);
             Text fam = new Text(qualFamPieces[0]);
-            Text qual = qualFamPieces.length > 1 ? new Text(qualFamPieces[1]) : null;
-            pairs.add(new Pair<Text, Text>(fam, qual));
+            if(qualFamPieces.length > 1) {
+                pairs.add(new Pair<Text, Text>(fam, new Text(qualFamPieces[1])));
+            }
         }
         return pairs;
     }

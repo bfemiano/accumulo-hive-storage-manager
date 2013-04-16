@@ -67,7 +67,7 @@ public class LazyAccumuloRow extends LazyStruct{
             getFieldInited()[id] = true;
             ByteArrayRef ref;
             String famQualPair = fetchCols.get(id);
-            if(AccumuloSerde.isKeyField(famQualPair)) {
+            if(AccumuloSerde.containsRowID(famQualPair)) {
                 ref = new ByteArrayRef();
                 ref.setData(row.getRowId().getBytes());
             } else {

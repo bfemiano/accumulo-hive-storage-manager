@@ -32,16 +32,13 @@ public class AccumuloSerde implements SerDe {
     public static final String INSTANCE_ID = "accumulo.instance.id";
     public static final String COLUMN_MAPPINGS = "accumulo.columns.mapping";
     public static final String ACCUMULO_ROWID_MAPPING = "accumulo.rowid.mapping";
-    public static final String MORE_ACCUMULO_THAN_HIVE = "You have too many hive columns defined for what is mapped in "
-            + COLUMN_MAPPINGS + " plus " + ACCUMULO_ROWID_MAPPING;
-    public static final String MORE_HIVE_THAN_ACCUMULO = "Is one column defined for the rowID and you forget the serde property "
-            + ACCUMULO_ROWID_MAPPING + "?";
-    private static final String KEY = "key=";
+    public static final String MORE_ACCUMULO_THAN_HIVE = "You have more " + COLUMN_MAPPINGS + " fields than hive columns";
+    public static final String MORE_HIVE_THAN_ACCUMULO = "You have more hive columns than fields mapped with " + COLUMN_MAPPINGS;
+    private static final String ROWID = "rowID";
     private LazySimpleSerDe.SerDeParameters serDeParameters;
     private LazyAccumuloRow cachedRow;
     private List<String> fetchCols;
     private String colMapping;
-    private String rowIdMapping;
     private byte[] separators;
     private boolean escaped;
     private byte escapedChar;
@@ -87,24 +84,16 @@ public class AccumuloSerde implements SerDe {
         return cachedRow;
     }
 
-    public static boolean isKeyField(String colName) {
-        return colName.contains(KEY);
+    public static boolean containsRowID(String colName) {
+        return colName.contains(ROWID);
     }
 
     private void initAccumuloSerdeParameters(Configuration conf, Properties properties)
             throws SerDeException{
         colMapping = properties.getProperty(COLUMN_MAPPINGS);
-        rowIdMapping = properties.getProperty(ACCUMULO_ROWID_MAPPING);
         String colTypeProperty = properties.getProperty(serdeConstants.LIST_COLUMN_TYPES);
         String name = getClass().getName();
         fetchCols = parseColumnMapping(colMapping);
-        if(rowIdMapping != null) {
-            String key = KEY + rowIdMapping;
-            fetchCols.add(key);
-            colMapping = colMapping + "," + key;
-            conf.set(ACCUMULO_ROWID_MAPPING, rowIdMapping);
-        }
-
         if (colTypeProperty == null) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < fetchCols.size(); i++) {
@@ -120,7 +109,7 @@ public class AccumuloSerde implements SerDe {
             throw new SerDeException(name + ": Hive table definition has "
                     + serDeParameters.getColumnNames().size() +
                     " elements while " + COLUMN_MAPPINGS + " has " +
-                    fetchCols.size() + " elements. " + getHelp(fetchCols.size(), serDeParameters.getColumnNames().size()));
+                    fetchCols.size() + " elements. " + printColumnMismatchTip(fetchCols.size(), serDeParameters.getColumnNames().size()));
         }
         separators = serDeParameters.getSeparators();
         escaped = serDeParameters.isEscaped();
@@ -131,7 +120,8 @@ public class AccumuloSerde implements SerDe {
             log.info("Serde initialized successfully for column mapping: " + colMapping);
     }
 
-    private String getHelp(int accumuloColumns, int hiveColumns) {
+
+    private String printColumnMismatchTip(int accumuloColumns, int hiveColumns) {
 
         if(accumuloColumns < hiveColumns) {
             return MORE_HIVE_THAN_ACCUMULO;
