@@ -19,8 +19,6 @@ See [accumulo_create_table.sql](src/test/hql/accumulo_create_table.sql) for CREA
 TODO: 
 ====================
 
-*   Field IDs should not be based off accumulo.column.mapping ordering. This is wrong. 
-
 *	Simple Predicate pushdown to iterators.
 
 *	More testing with joins.
