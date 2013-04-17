@@ -18,7 +18,7 @@ ACLED examples:
 
 The query examples use a cleaned up version of the structured Acled Nigeria dataset. (http://www.acleddata.com/) 
 
-1.	Navigate to and run [ingest.sh](src/test/hql/acled/ingest.sh) from relative directory. This will run standalone to both load ACLED data into HDFS for a Hive external table named 'acled_nigeria', and create a table in Accumulo named 'acled'. The script handles both ETL ingest automatically, so long as $ACCUMULO_HOME/bin/ and hive are on the environment path. 
+1.	Navigate to and run [ingest.sh](src/test/hql/acled/ingest.sh) from relative directory. The script handles loading ACLED data into HDFS to create a Hive external table named 'acled_nigeria', and creating a table in Accumulo named 'acled'. The ETL and data for both processes runs standalone from the  [ingest](src/test/hql/acled) directory. Just make sure $ACCUMULO_HOME/bin/ and hive are on the environment path. 
 
 2.	See [query_acled.sql](src/test/hql/query_acled.sql) for CREATE EXTERNAL TABLE example, required aux jars, and several sample queries that utilize both the Hive and Accumulo tables. The number of hive columns in table definition must be equal to accumulo.column.mapping.
 
