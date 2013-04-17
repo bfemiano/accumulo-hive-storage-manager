@@ -1,0 +1,26 @@
+----------------------------------------------------------------
+2013-04-17 05:15:53.919 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.4.2.0 - (689064): instance a816c00e-013e-166b-a5c1-000003cab0a8
+on database directory /Users/bfemiano/cloud/hive-0.10.0/metastore_db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2013-04-17 05:15:57.373 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.4.2.0 - (689064): instance 1c16805c-013e-166b-a5c1-000003cab0a8
+on database directory /Users/bfemiano/cloud/accumulo-trunk/trunk/contrib/hive-storage-handler/src/test/hql/acled/ingest/TempStatsStore  
+
+Database Class Loader started - derby.database.classpath=''
+
+2013-04-17 05:15:57.389 GMT:
+Shutting down instance 1c16805c-013e-166b-a5c1-000003cab0a8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2013-04-17 05:16:17.828 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.4.2.0 - (689064): instance 7c740060-013e-166b-a5c1-000003cab0a8
+on database directory /Users/bfemiano/cloud/accumulo-trunk/trunk/contrib/hive-storage-handler/src/test/hql/acled/ingest/TempStatsStore  
+
+Database Class Loader started - derby.database.classpath=''
+
+2013-04-17 05:16:17.926 GMT:
+Shutting down instance 7c740060-013e-166b-a5c1-000003cab0a8
+----------------------------------------------------------------
