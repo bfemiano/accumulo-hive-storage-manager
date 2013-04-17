@@ -22,7 +22,7 @@ The query examples use a cleaned up version of the structured Acled Nigeria data
 
 2.	See [query_acled.sql](src/test/hql/query_acled.sql) for CREATE EXTERNAL TABLE example, required aux jars, and several sample queries that utilize both the Hive and Accumulo tables. The number of hive columns in table definition must be equal to accumulo.column.mapping.
 
-3.	Setup Accumulo parameters and launch with [query_acled.sh](src/test/hql/query_acled.sh) 
+3.	Run [query_acled.sh](src/test/hql/query_acled.sh) to see the different query results. Make sure to configure the -hiveconf variables for your local Accumulo instance. 
 
 TODO: 
 ====================
