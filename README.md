@@ -18,11 +18,11 @@ ACLED examples:
 
 The query examples use a cleaned up version of the structured Acled Nigeria dataset. (http://www.acleddata.com/) 
 
-*Run [ingest.sh](src/test/hql/acled/ingest.sh) to load ACLED data into Hive and Accumulo tables. The script handles both ETL ingest automatically, so long as $ACCUMULO_HOME/bin is on the environment path. 
+1.	Run [ingest.sh](src/test/hql/acled/ingest.sh) to load ACLED data into Hive and Accumulo tables. The script handles both ETL ingest automatically, so long as $ACCUMULO_HOME/bin is on the environment path. 
 
-*See [query_acled.sql](src/test/hql/query_acled.sql) for CREATE EXTERNAL TABLE example, required aux jars, and several sample queries that utilize both the Hive and Accumulo tables. The number of hive columns in table definition must be equal to accumulo.column.mapping + accumulo.rowid.mapping (if present). 
+2.	See [query_acled.sql](src/test/hql/query_acled.sql) for CREATE EXTERNAL TABLE example, required aux jars, and several sample queries that utilize both the Hive and Accumulo tables. The number of hive columns in table definition must be equal to accumulo.column.mapping + accumulo.rowid.mapping (if present). 
 
-*Setup Accumulo parameters and launch with [query_acled.sh](src/test/hql/query_acled.sh) 
+3.	Setup Accumulo parameters and launch with [query_acled.sh](src/test/hql/query_acled.sh) 
 
 TODO: 
 ====================
