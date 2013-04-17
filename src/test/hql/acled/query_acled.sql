@@ -19,6 +19,8 @@ CREATE EXTERNAL TABLE acled(rowid STRING, lat DOUBLE, lon DOUBLE, loc STRING, sr
 STORED BY 'org.apache.accumulo.storagehandler.AccumuloStorageHandler' 
 WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'rowID,cf|lat,cf|lon,cf|loc,cf|src,cf|type', 
 	'accumulo.table.name' = 'acled'); 
+	
+select count(1) from acled where type = 'Violence against civilians';
 
 select 'count from accumulo=',count(1) from acled;
 
