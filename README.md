@@ -17,7 +17,7 @@ ACLED examples:
 =================
 
 Requirements
-========
+------------
  
 $ACCUMULO_HOME/bin, $HADOOP_HOME/bin, $HIVE_HOME/bin on environment path. Either wget or curl installed. 
 
