@@ -16,7 +16,10 @@ have to do until Accumulo 1.5+ is hosted in maven central.
 ACLED examples:
 =================
 
-Requirements: $ACCUMULO_HOME/bin, $HADOOP_HOME/bin, $HIVE_HOME/bin on claspath. Either wget or curl installed. 
+Requirements
+========
+ 
+$ACCUMULO_HOME/bin, $HADOOP_HOME/bin, $HIVE_HOME/bin on environment path. Either wget or curl installed. 
 
 The query examples use a cleaned up version of the structured Acled Nigeria dataset. (http://www.acleddata.com/) 
 
