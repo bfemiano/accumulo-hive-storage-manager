@@ -31,10 +31,8 @@ public class AccumuloSerde implements SerDe {
     public static final String ZOOKEEPERS = "accumulo.zookeepers";
     public static final String INSTANCE_ID = "accumulo.instance.id";
     public static final String COLUMN_MAPPINGS = "accumulo.columns.mapping";
-    public static final String ACCUMULO_ROWID_MAPPING = "accumulo.rowid.mapping";
     public static final String MORE_ACCUMULO_THAN_HIVE = "You have more " + COLUMN_MAPPINGS + " fields than hive columns";
     public static final String MORE_HIVE_THAN_ACCUMULO = "You have more hive columns than fields mapped with " + COLUMN_MAPPINGS;
-    private static final String ROWID = "rowID";
     private LazySimpleSerDe.SerDeParameters serDeParameters;
     private LazyAccumuloRow cachedRow;
     private List<String> fetchCols;
@@ -48,8 +46,6 @@ public class AccumuloSerde implements SerDe {
     static {
         log.setLevel(Level.INFO);
     }
-
-    private static final Pattern COMMA = Pattern.compile("[,]");
 
     private ObjectInspector cachedObjectInspector;
     //private static final String MAP_STRING_STRING_NAME = Constants.MAP_TYPE_NAME + "<" +
@@ -84,16 +80,12 @@ public class AccumuloSerde implements SerDe {
         return cachedRow;
     }
 
-    public static boolean containsRowID(String colName) {
-        return colName.contains(ROWID);
-    }
-
     private void initAccumuloSerdeParameters(Configuration conf, Properties properties)
             throws SerDeException{
         colMapping = properties.getProperty(COLUMN_MAPPINGS);
         String colTypeProperty = properties.getProperty(serdeConstants.LIST_COLUMN_TYPES);
         String name = getClass().getName();
-        fetchCols = parseColumnMapping(colMapping);
+        fetchCols = AccumuloHiveUtils.parseColumnMapping(colMapping);
         if (colTypeProperty == null) {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < fetchCols.size(); i++) {
@@ -130,14 +122,6 @@ public class AccumuloSerde implements SerDe {
         }
     }
 
-    public static List<String> parseColumnMapping(String columnMapping)
-            throws SerDeException{
-
-        if(columnMapping == null)
-            throw new SerDeException("null columnMapping not allowed.");
-        return Lists.newArrayList(COMMA.split(columnMapping));
-    }
-
     public Class<? extends Writable> getSerializedClass() {
         return Mutation.class;
     }
@@ -150,13 +134,11 @@ public class AccumuloSerde implements SerDe {
     public Object deserialize(Writable writable) throws SerDeException {
         if(!(writable instanceof AccumuloHiveRow)) {
             throw new SerDeException(getClass().getName() + " : " +
-                    "Expects AccumuloHiveRow. Got " + writable.getClass().getName());
+                    "Expected AccumuloHiveRow. Got " + writable.getClass().getName());
         }
-        log.info(((AccumuloHiveRow)writable).toString());
 
         cachedRow.init((AccumuloHiveRow)writable, fetchCols);
         return cachedRow;
-        //return null;
     }
 
     public ObjectInspector getObjectInspector() throws SerDeException {

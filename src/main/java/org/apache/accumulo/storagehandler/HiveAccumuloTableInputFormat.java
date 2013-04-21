@@ -2,7 +2,6 @@ package org.apache.accumulo.storagehandler;
 
 import com.google.common.collect.Lists;
 import org.apache.accumulo.core.client.*;
-import org.apache.accumulo.core.client.mapreduce.AccumuloInputFormat;
 import org.apache.accumulo.core.client.mapreduce.AccumuloRowInputFormat;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
@@ -12,7 +11,6 @@ import org.apache.accumulo.core.util.Pair;
 import org.apache.accumulo.core.util.PeekingIterator;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
-import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.InputSplit;
@@ -39,7 +37,7 @@ public class HiveAccumuloTableInputFormat
         extends AccumuloRowInputFormat
         implements org.apache.hadoop.mapred.InputFormat<Text, AccumuloHiveRow> {
     private static final Pattern PIPE = Pattern.compile("[|]");
-
+    private AccumuloPredicateHandler predicateHandler = AccumuloPredicateHandler.getInstance();
     private Instance instance;
 
     @Override
@@ -48,7 +46,6 @@ public class HiveAccumuloTableInputFormat
         String id = jobConf.get(AccumuloSerde.INSTANCE_ID);
         String user = jobConf.get(AccumuloSerde.USER_NAME);
         String pass = jobConf.get(AccumuloSerde.USER_PASS);
-        String key = jobConf.get(AccumuloSerde.ACCUMULO_ROWID_MAPPING);
         String zookeepers = jobConf.get(AccumuloSerde.ZOOKEEPERS);
         instance = getInstance(id, zookeepers);
         Job job = new Job(jobConf);
@@ -56,19 +53,13 @@ public class HiveAccumuloTableInputFormat
             Connector connector =  instance.getConnector(user,  new PasswordToken(pass.getBytes()));
             String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
             List<String> colQualFamPairs;
-            try {
-                colQualFamPairs = AccumuloSerde.parseColumnMapping(colMapping);
-            } catch (SerDeException e) {
-                throw new IOException(StringUtils.stringifyException(e));
-            }
-            configure(job, connector, colQualFamPairs);
+            colQualFamPairs = AccumuloHiveUtils.parseColumnMapping(colMapping);
+            configure(job, jobConf, connector, colQualFamPairs);
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
-            int incForKey = key == null ? 0 : 1;
-            if (colQualFamPairs.size() + incForKey < readColIds.size())
-                throw new IOException("Number of colfam:qual pairs + rowkey (" + (colQualFamPairs.size() + incForKey) + ")" +
-                        " numbers less than the hive table columns. (" + readColIds.size() + ") "  +
-                        "Did you forget the serde property " + AccumuloSerde.ACCUMULO_ROWID_MAPPING + "?");
-
+            int incForRowID = AccumuloHiveUtils.containsRowID(colMapping) ? 1 : 0;
+            if (colQualFamPairs.size() + incForRowID < readColIds.size())
+                throw new IOException("Number of colfam:qual pairs + rowkey (" + (colQualFamPairs.size() + incForRowID) + ")" +
+                        " numbers less than the hive table columns. (" + readColIds.size() + ")");
 
             JobContext context = new JobContext(job.getConfiguration(), job.getJobID());
             Path[] tablePaths = FileInputFormat.getInputPaths(context);
@@ -101,6 +92,8 @@ public class HiveAccumuloTableInputFormat
         this.instance = instance;
     }
 
+
+
     @Override
     public RecordReader<Text, AccumuloHiveRow> getRecordReader(InputSplit inputSplit,
                                                                JobConf jobConf,
@@ -118,17 +111,12 @@ public class HiveAccumuloTableInputFormat
         try {
             String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
             List<String> colQualFamPairs;
-            try {
-                colQualFamPairs = AccumuloSerde.parseColumnMapping(colMapping);
-            } catch (SerDeException e) {
-                throw new IOException(StringUtils.stringifyException(e));
-            }
-
+            colQualFamPairs = AccumuloHiveUtils.parseColumnMapping(colMapping);
             Connector connector = instance.getConnector(user, new PasswordToken(pass.getBytes()));
-            configure(job, connector, colQualFamPairs);
+            configure(job, jobConf, connector, colQualFamPairs);
 
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
-            int incForRowID = AccumuloSerde.containsRowID(colMapping) ? 1 : 0;
+            int incForRowID = AccumuloHiveUtils.containsRowID(colMapping) ? 1 : 0;
             if (colQualFamPairs.size() + incForRowID < readColIds.size())
                 throw new IOException("Number of colfam:qual pairs + rowID (" + (colQualFamPairs.size() + incForRowID) + ")" +
                         " numbers less than the hive table columns. (" + readColIds.size() + ")");
@@ -221,7 +209,7 @@ public class HiveAccumuloTableInputFormat
         }
     }
 
-    private void configure(Job job, Connector connector, List<String> colQualFamPairs)
+    private void configure(Job job, JobConf conf, Connector connector, List<String> colQualFamPairs)
             throws AccumuloSecurityException, AccumuloException {
         String instanceId = job.getConfiguration().get(AccumuloSerde.INSTANCE_ID);
         String zookeepers = job.getConfiguration().get(AccumuloSerde.ZOOKEEPERS);
@@ -236,6 +224,9 @@ public class HiveAccumuloTableInputFormat
         setConnectorInfo(job, user, new PasswordToken(pass.getBytes()));
         setInputTableName(job, tableName);
         setScanAuthorizations(job, connector.securityOperations().getUserAuthorizations(user));
+        List<IteratorSetting> iterators = predicateHandler.getIterators(conf);
+        for(IteratorSetting is : iterators)
+            addIterator(job, is);
         fetchColumns(job, getPairCollection(colQualFamPairs));
     }
 

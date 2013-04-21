@@ -7,21 +7,26 @@ import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.index.IndexPredicateAnalyzer;
+import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
+import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler;
+import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.security.authorization.HiveAuthorizationProvider;
+import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.SerDe;
-import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * User: bfemiano
@@ -29,11 +34,16 @@ import java.util.Properties;
  * Time: 1:37 AM
  */
 public class AccumuloStorageHandler
-        implements HiveStorageHandler,HiveMetaHook {
+        implements HiveStorageHandler,HiveMetaHook, HiveStoragePredicateHandler {
     private Configuration conf;
     private Connector connector;
 
     private static final Logger log = Logger.getLogger(AccumuloStorageHandler.class);
+    static {
+        log.setLevel(Level.INFO);
+    }
+    private AccumuloPredicateHandler predicateHandler =AccumuloPredicateHandler.getInstance();
+    private static final Pattern COMMA = Pattern.compile("[,]");
 
     private Connector getConnector(Map<String,String> parameters)
             throws MetaException{
@@ -56,10 +66,6 @@ public class AccumuloStorageHandler
                 tblProperties.getProperty(AccumuloSerde.COLUMN_MAPPINGS));
         String tableName = tblProperties.getProperty(AccumuloSerde.TABLE_NAME);
         jobProps.put(AccumuloSerde.TABLE_NAME, tableName);
-
-        String rowId = tblProperties.getProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING);
-        jobProps.put(AccumuloSerde.ACCUMULO_ROWID_MAPPING, rowId);
-
     }
 
     private String getTableName(Table table) throws MetaException{
@@ -106,15 +112,17 @@ public class AccumuloStorageHandler
 
     @Override
     public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> stringStringMap) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        //TODO: implement for serialization to Accumulo
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Class<? extends InputFormat> getInputFormatClass() {
         return HiveAccumuloTableInputFormat.class;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Class<? extends OutputFormat> getOutputFormatClass() {
         return HiveAccumuloTableOutputFormat.class;
     }
@@ -134,7 +142,7 @@ public class AccumuloStorageHandler
             String columnMapping = serdeParams.get(AccumuloSerde.COLUMN_MAPPINGS);
             if (columnMapping == null)
                 throw new MetaException(AccumuloSerde.COLUMN_MAPPINGS + " missing from SERDEPROPERTIES");
-            List<String> colQualFamPairs = AccumuloSerde.parseColumnMapping(columnMapping);
+            List<String> colQualFamPairs = AccumuloHiveUtils.parseColumnMapping(columnMapping);
             if (!tableOpts.exists(tblName)) {
                 if(!isExternal) {
                     tableOpts.create(tblName);
@@ -156,8 +164,8 @@ public class AccumuloStorageHandler
             throw new MetaException(StringUtils.stringifyException(e));
         } catch (TableNotFoundException e) {
             throw new MetaException(StringUtils.stringifyException(e));
-        } catch (SerDeException e) {
-            log.info("Error parsing column mapping in Serde");
+        } catch (IllegalArgumentException e) {
+            log.info("Error parsing column mapping");
             throw new MetaException(StringUtils.stringifyException(e));
         }
     }
@@ -214,4 +222,11 @@ public class AccumuloStorageHandler
         //do nothing
     }
 
+    @Override
+    public DecomposedPredicate decomposePredicate(JobConf conf,
+                                                  Deserializer deserializer,
+                                                  ExprNodeDesc desc) {
+        log.info("Calling decompose predicate");
+        return predicateHandler.decompose(conf, (AccumuloSerde)deserializer, desc);
+    }
 }

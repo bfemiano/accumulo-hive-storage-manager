@@ -1,4 +1,5 @@
 import org.apache.accumulo.storagehandler.AccumuloHiveRow;
+import org.apache.accumulo.storagehandler.AccumuloHiveUtils;
 import org.apache.accumulo.storagehandler.AccumuloSerde;
 import org.apache.accumulo.storagehandler.LazyAccumuloRow;
 import org.apache.hadoop.conf.Configuration;
@@ -28,7 +29,6 @@ public class AccumuloSerdeTest {
     public void columnMismatch() {
         Properties properties = new Properties();
         Configuration conf = new Configuration();
-        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f3");
         properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3,field4");
         properties.setProperty(serdeConstants.LIST_COLUMN_TYPES, "string:string:string:string");
@@ -41,7 +41,6 @@ public class AccumuloSerdeTest {
             assertTrue(e.getMessage().contains(AccumuloSerde.MORE_HIVE_THAN_ACCUMULO));
         }
 
-        properties.setProperty(AccumuloSerde.ACCUMULO_ROWID_MAPPING, "blah");
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
         properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2");
         properties.setProperty(serdeConstants.LIST_COLUMN_TYPES, "string:string");
@@ -86,8 +85,10 @@ public class AccumuloSerdeTest {
         try {
             serde.initialize(conf, properties);
             fail("Missing columnMapping. Should have failed");
-        } catch (SerDeException e) {
+        } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage().contains("null columnMapping not allowed."));
+        }  catch (SerDeException e) {
+            fail(e.getMessage());
         }
 
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
@@ -159,7 +160,7 @@ public class AccumuloSerdeTest {
         try {
             properties.setProperty(serdeConstants.LIST_COLUMNS, "blah,field2,field3,field4");
             serde.initialize(conf, properties);
-            assertTrue(AccumuloSerde.containsRowID("rowID"));
+            assertTrue(AccumuloHiveUtils.containsRowID("rowID"));
 
             AccumuloHiveRow row = new AccumuloHiveRow();
             row.setRowId("r1");
