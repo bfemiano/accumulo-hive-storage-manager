@@ -29,14 +29,21 @@ The query examples use a cleaned up version of the structured Acled Nigeria data
 
 3.	Run [query_acled.sh](src/test/hql/query_acled.sh) to see the different query results. Make sure to configure the -hiveconf variables for your local Accumulo instance. 
 
-TODO: 
+[More Examples](/examples/)
+
+Known limitations:
+===================
+
+
+
+
+Future enhancments: 
 ====================
 
-*	Simple Predicate pushdown to iterators.
-
-*	More testing with joins.
-
-*	Output to Accumulo from Hive. The OutputFormat has not yet been wired into the Serde for field serialization to Accumulo.
-
-*	Statistics
+*	Simple Predicate pushdown to iterators. 
+*   Serde property for setting fixed timestamp during mutations. 
+*	Allow CREATE TABLE and INSERT for field serialization to Accumulo.
+*   Allow per-qualifier type hints in the serde property, similar to the latest build of the HBase StorageHandler. Currently the Hive types must match the Accumulo value types to avoid oddities. 
+*   Support for remaining hive primative column types.
+*   Support for complex value types (Struct, Map, Array, Union). 
 

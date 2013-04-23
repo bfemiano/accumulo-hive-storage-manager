@@ -61,7 +61,7 @@ public class AccumuloHiveUtils {
         return Lists.newArrayList(COMMA.split(columnMapping));
     }
 
-    public static String getHiveColNameOfRowID (JobConf conf) {
+    public static String hiveColForRowID (JobConf conf) {
         String hiveColProp = conf.get(serdeConstants.LIST_COLUMNS);
         List<String> hiveCols = AccumuloHiveUtils.parseColumnMapping(hiveColProp);
         int rowidIndex = getRowIdIndex(conf);
@@ -78,6 +78,8 @@ public class AccumuloHiveUtils {
     public static int getRowIdIndex(JobConf conf) {
         int index = -1;
         String accumuloProp = conf.get(AccumuloSerde.COLUMN_MAPPINGS);
+        if(accumuloProp == null)
+            throw new IllegalArgumentException(AccumuloSerde.COLUMN_MAPPINGS + " cannot be null");
         List<String> accumCols = AccumuloHiveUtils.parseColumnMapping(accumuloProp);
         for (int i = 0; i < accumCols.size(); i++) {
             if(containsRowID(accumCols.get(i))) {
@@ -85,6 +87,50 @@ public class AccumuloHiveUtils {
             }
         }
         return index;
+    }
+
+    public static String hiveToAccumulo(String column, JobConf conf) {
+        String accumuloProp = conf.get(AccumuloSerde.COLUMN_MAPPINGS);
+        String hiveProp = conf.get(serdeConstants.LIST_COLUMNS);
+        if(accumuloProp == null)
+            throw new IllegalArgumentException(AccumuloSerde.COLUMN_MAPPINGS + " cannot be null");
+        List<String> accumCols = parseColumnMapping(accumuloProp);
+        List<String> hiveCols = parseColumnMapping(hiveProp);
+        for (int i = 0; i < hiveCols.size(); i++) {
+            String hiveCol = hiveCols.get(i);
+            if(hiveCol.equals(column))
+                return accumCols.get(i);
+        }
+        throw new IllegalArgumentException("column " + column + " is not mapped in the hive table definition");
+    }
+
+    public static String accumuloToHive(String column, JobConf conf) {
+        String accumuloProp = conf.get(AccumuloSerde.COLUMN_MAPPINGS);
+        String hiveProp = conf.get(serdeConstants.LIST_COLUMNS);
+        if(accumuloProp == null)
+            throw new IllegalArgumentException(AccumuloSerde.COLUMN_MAPPINGS + " cannot be null");
+        List<String> accumCols = parseColumnMapping(accumuloProp);
+        List<String> hiveCols = parseColumnMapping(hiveProp);
+        for (int i = 0; i < accumCols.size(); i++) {
+            String accuCol = accumCols.get(i);
+            if(accuCol.equals(column))
+                return hiveCols.get(i);
+        }
+        throw new IllegalArgumentException("column " + column + " is not mapped in " + AccumuloSerde.COLUMN_MAPPINGS);
+    }
+
+    public static String hiveColType(String col, JobConf conf) {
+        List<String> hiveCols = parseColumnMapping(conf.get(serdeConstants.LIST_COLUMNS));
+        List<String> types =  parseColumnMapping(conf.get(serdeConstants.LIST_COLUMN_TYPES));
+        if(types.size() != hiveCols.size())
+            throw new IllegalArgumentException("num of hive cols (" + hiveCols.size() + ") does not match " +
+                    "number of types (" + types.size() + ")");
+        for(int i = 0; i < hiveCols.size(); i++) {
+            String hiveCOl = hiveCols.get(i);
+            if(hiveCOl.equals(col))
+                return types.get(i);
+        }
+        throw new IllegalArgumentException("not type index found for column: " + col);
     }
 
     public static Connector getConnector(Configuration conf)

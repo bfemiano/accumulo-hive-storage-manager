@@ -146,6 +146,6 @@ public class AccumuloSerde implements SerDe {
     }
 
     public SerDeStats getSerDeStats() {
-        throw new UnsupportedOperationException("Stats not yet supported.");
+        throw new UnsupportedOperationException("SerdeStats not supported.");
     }
 }

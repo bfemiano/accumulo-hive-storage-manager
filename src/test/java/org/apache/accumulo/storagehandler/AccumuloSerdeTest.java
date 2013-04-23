@@ -1,18 +1,16 @@
-import org.apache.accumulo.storagehandler.AccumuloHiveRow;
-import org.apache.accumulo.storagehandler.AccumuloHiveUtils;
-import org.apache.accumulo.storagehandler.AccumuloSerde;
-import org.apache.accumulo.storagehandler.LazyAccumuloRow;
+package org.apache.accumulo.storagehandler;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
-import static org.testng.Assert.*;
-
 import org.apache.hadoop.hive.serde2.lazy.LazyString;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
 import java.util.Properties;
+
+import static org.testng.Assert.*;
 
 /**
  * User: bfemiano

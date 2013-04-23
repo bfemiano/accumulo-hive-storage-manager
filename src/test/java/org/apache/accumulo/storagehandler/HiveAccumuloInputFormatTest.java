@@ -1,19 +1,17 @@
+package org.apache.accumulo.storagehandler;
+
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.storagehandler.AccumuloHiveRow;
-import org.apache.accumulo.storagehandler.AccumuloSerde;
-import org.apache.accumulo.storagehandler.HiveAccumuloTableInputFormat;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.log4j.Logger;
-
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

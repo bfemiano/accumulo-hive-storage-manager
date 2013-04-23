@@ -2,13 +2,12 @@ package org.apache.accumulo.storagehandler;
 
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.admin.TableOperations;
+import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.ql.index.IndexPredicateAnalyzer;
-import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler;
@@ -42,7 +41,7 @@ public class AccumuloStorageHandler
     static {
         log.setLevel(Level.INFO);
     }
-    private AccumuloPredicateHandler predicateHandler =AccumuloPredicateHandler.getInstance();
+    private AccumuloPredicateHandler predicateHandler = AccumuloPredicateHandler.getInstance();
     private static final Pattern COMMA = Pattern.compile("[,]");
 
     private Connector getConnector(Map<String,String> parameters)

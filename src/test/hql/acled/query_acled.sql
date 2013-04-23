@@ -20,16 +20,6 @@ STORED BY 'org.apache.accumulo.storagehandler.AccumuloStorageHandler'
 WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'rowID,cf|lat,cf|lon,cf|loc,cf|src,cf|type', 
 	'accumulo.table.name' = 'acled'); 
 	
-select count(1) from acled where type = 'Violence against civilians';
-
-select 'count from accumulo=',count(1) from acled;
-
-select 'count from hive=',count(1) from acled_nigeria;
-
-select accum.rowid, ac.event_date
-	 from acled_nigeria_cleaned ac 
-	 join acled accum on accum.lat = ac.latitude 
-		             and accum.lon = ac.longitude limit 100;
-
+select count(1) from acled where type = 'Violence against civilians' and lon > 84.4;
 
 
