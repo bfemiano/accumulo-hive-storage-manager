@@ -40,9 +40,9 @@ Known limitations:
 Future enhancments: 
 ====================
 
-*	Simple Predicate pushdown to iterators. 
+*	Simple Predicate pushdown to iterators.
+*	Allow INSERT for field serialization to Accumulo. OutputFormat exists but is not wired to Serde or tested.  
 *   Serde property for setting fixed timestamp during mutations. 
-*	Allow CREATE TABLE and INSERT for field serialization to Accumulo.
 *   Allow per-qualifier type hints in the serde property, similar to the latest build of the HBase StorageHandler. Currently the Hive types must match the Accumulo value types to avoid oddities. 
 *   Support for remaining hive primative column types.
 *   Support for complex value types (Struct, Map, Array, Union). 
