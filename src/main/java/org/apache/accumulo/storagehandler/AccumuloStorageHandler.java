@@ -141,13 +141,12 @@ public class AccumuloStorageHandler
             String columnMapping = serdeParams.get(AccumuloSerde.COLUMN_MAPPINGS);
             if (columnMapping == null)
                 throw new MetaException(AccumuloSerde.COLUMN_MAPPINGS + " missing from SERDEPROPERTIES");
-            List<String> colQualFamPairs = AccumuloHiveUtils.parseColumnMapping(columnMapping);
             if (!tableOpts.exists(tblName)) {
                 if(!isExternal) {
                     tableOpts.create(tblName);
                     tableOpts.online(tblName);
                 } else {
-                    throw new MetaException("Accumulo table " + tblName + " doesn't existing even though declared external");
+                    throw new MetaException("Accumulo table " + tblName + " doesn't exist even though declared external");
                 }
             } else {
                 if (!isExternal) {
