@@ -29,7 +29,7 @@ The query examples use a cleaned up version of the structured Acled Nigeria data
 
 3.	Run [query_acled.sh](src/test/hql/query_acled.sh) to see the different query results. Make sure to configure the -hiveconf variables for your local Accumulo instance. 
 
-<a href="https://github.com/bfemiano/accumulo-hive-storage-handler/examples">More Examples</a>
+<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/examples">More Examples</a>
 
 Known limitations:
 ===================
