@@ -7,7 +7,7 @@ package org.apache.accumulo.storagehandler.predicate.compare;
  * Time: 12:27 AM
  * To change this template use File | Settings | File Templates.
  */
-public interface PrimativeCompare {
+public interface PrimitiveCompare {
 
     public boolean isEqual(byte[] value);
     public boolean isNotEqual(byte [] value);
@@ -17,4 +17,5 @@ public interface PrimativeCompare {
     public boolean lessThan(byte [] value);
     public boolean like(byte[] value);
     public Object serialize(byte[] value);
+    public void init(byte[] constant);
 }

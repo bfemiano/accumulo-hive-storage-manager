@@ -6,12 +6,14 @@ import org.apache.accumulo.core.client.mapreduce.AccumuloRowInputFormat;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.util.Pair;
 import org.apache.accumulo.core.util.PeekingIterator;
 import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
+import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.InputSplit;
@@ -75,6 +77,8 @@ public class HiveAccumuloTableInputFormat
         }  catch (AccumuloException e) {
             throw new IOException(StringUtils.stringifyException(e));
         } catch (AccumuloSecurityException e) {
+            throw new IOException(StringUtils.stringifyException(e));
+        } catch (SerDeException e) {
             throw new IOException(StringUtils.stringifyException(e));
         }
     }
@@ -207,11 +211,13 @@ public class HiveAccumuloTableInputFormat
             throw new IOException(StringUtils.stringifyException(e));
         } catch (InterruptedException e) {
             throw new IOException(StringUtils.stringifyException(e));
+        } catch (SerDeException e) {
+            throw new IOException(StringUtils.stringifyException(e));
         }
     }
 
     private void configure(Job job, JobConf conf, Connector connector, List<String> colQualFamPairs)
-            throws AccumuloSecurityException, AccumuloException {
+            throws AccumuloSecurityException, AccumuloException, SerDeException {
         String instanceId = job.getConfiguration().get(AccumuloSerde.INSTANCE_ID);
         String zookeepers = job.getConfiguration().get(AccumuloSerde.ZOOKEEPERS);
         String user = job.getConfiguration().get(AccumuloSerde.USER_NAME);
@@ -228,6 +234,9 @@ public class HiveAccumuloTableInputFormat
         List<IteratorSetting> iterators = predicateHandler.getIterators(conf);
         for(IteratorSetting is : iterators)
             addIterator(job, is);
+        Collection<Range> ranges = predicateHandler.getRanges(conf);
+        if(ranges.size() > 0)
+            setRanges(job, ranges);
         fetchColumns(job, getPairCollection(colQualFamPairs));
     }
 

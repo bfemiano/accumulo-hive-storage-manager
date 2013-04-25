@@ -44,7 +44,7 @@ public class AccumuloStorageHandler
     private AccumuloPredicateHandler predicateHandler = AccumuloPredicateHandler.getInstance();
     private static final Pattern COMMA = Pattern.compile("[,]");
 
-    private Connector getConnector(Map<String,String> parameters)
+    private Connector getConnector()
             throws MetaException{
 
         if (connector == null){
@@ -65,6 +65,11 @@ public class AccumuloStorageHandler
                 tblProperties.getProperty(AccumuloSerde.COLUMN_MAPPINGS));
         String tableName = tblProperties.getProperty(AccumuloSerde.TABLE_NAME);
         jobProps.put(AccumuloSerde.TABLE_NAME, tableName);
+        String useIterators = tblProperties.getProperty(AccumuloSerde.NO_ITERATOR_PUSHDOWN);
+        if(useIterators != null) {
+            jobProps.put(AccumuloSerde.NO_ITERATOR_PUSHDOWN, useIterators);
+        }
+
     }
 
     private String getTableName(Table table) throws MetaException{
@@ -107,6 +112,10 @@ public class AccumuloStorageHandler
                 props.getProperty(AccumuloSerde.COLUMN_MAPPINGS));
         properties.put(AccumuloSerde.TABLE_NAME,
                 props.getProperty(AccumuloSerde.TABLE_NAME));
+        String useIterators = props.getProperty(AccumuloSerde.NO_ITERATOR_PUSHDOWN);
+        if(useIterators != null) {
+            properties.put(AccumuloSerde.NO_ITERATOR_PUSHDOWN, useIterators);
+        }
     }
 
     @Override
@@ -135,7 +144,7 @@ public class AccumuloStorageHandler
         }
         try {
             String tblName = getTableName(table);
-            Connector connector = getConnector(table.getParameters());
+            Connector connector = getConnector();
             TableOperations tableOpts = connector.tableOperations();
             Map<String, String> serdeParams = table.getSd().getSerdeInfo().getParameters();
             String columnMapping = serdeParams.get(AccumuloSerde.COLUMN_MAPPINGS);
@@ -173,7 +182,7 @@ public class AccumuloStorageHandler
         String tblName = getTableName(table);
         boolean isExternal = MetaStoreUtils.isExternalTable(table);
         try {
-            TableOperations tblOpts = getConnector(table.getParameters()).tableOperations();
+            TableOperations tblOpts = getConnector().tableOperations();
             if(!isExternal && tblOpts.exists(tblName)){
                 tblOpts.delete(tblName);
             }
@@ -197,7 +206,7 @@ public class AccumuloStorageHandler
         boolean isExternal = MetaStoreUtils.isExternalTable(table);
         try {
             if(!isExternal && deleteData){
-                TableOperations tblOpts = getConnector(table.getParameters()).tableOperations();
+                TableOperations tblOpts = getConnector().tableOperations();
                 if(tblOpts.exists(tblName))
                     tblOpts.delete(tblName);
             }
@@ -225,6 +234,11 @@ public class AccumuloStorageHandler
                                                   Deserializer deserializer,
                                                   ExprNodeDesc desc) {
         log.info("Calling decompose predicate");
-        return predicateHandler.decompose(conf, (AccumuloSerde)deserializer, desc);
+        if(conf.get(AccumuloSerde.NO_ITERATOR_PUSHDOWN) != null){
+            return predicateHandler.decompose(conf, desc);
+        } else {
+            log.info("Set to ignore iterator. skipping predicate handler");
+            return null;
+        }
     }
 }

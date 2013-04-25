@@ -63,7 +63,7 @@ public class PredicateHandlerTest {
         boolean foundInt = false;
         boolean foundDouble = false;
         for(String type : handler.pComparisonKeyset()) {
-            Class<? extends PrimativeCompare> pCompare = handler.getPrimativeComparison(type);
+            Class<? extends PrimitiveCompare> pCompare = handler.getPrimativeComparison(type);
             if(pCompare.getName().equals(DoubleCompare.class.getName())) {
                 foundDouble = true;
             } else if (pCompare.getName().equals(LongCompare.class.getName())) {

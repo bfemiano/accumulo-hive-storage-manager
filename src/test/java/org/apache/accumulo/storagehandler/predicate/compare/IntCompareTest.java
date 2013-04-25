@@ -22,7 +22,10 @@ public class IntCompareTest {
 
     @BeforeClass
     public void setup() {
-        intCompare = new IntCompare(10);
+        byte[] ibytes = new byte[4];
+        ByteBuffer.wrap(ibytes).putInt(10);
+        intCompare = new IntCompare();
+        intCompare.init(ibytes);
     }
 
     public byte[] getBytes(int val) {

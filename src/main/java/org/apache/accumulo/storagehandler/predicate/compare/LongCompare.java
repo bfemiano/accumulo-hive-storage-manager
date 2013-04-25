@@ -9,12 +9,13 @@ import java.nio.ByteBuffer;
  * Time: 1:01 AM
  * To change this template use File | Settings | File Templates.
  */
-public class LongCompare implements PrimativeCompare {
+public class LongCompare implements PrimitiveCompare {
 
     private long constant;
 
-    public LongCompare(long constant) {
-        this.constant = constant;
+    @Override
+    public void init(byte[] constant) {
+        this.constant = serialize(constant);
     }
 
     @Override

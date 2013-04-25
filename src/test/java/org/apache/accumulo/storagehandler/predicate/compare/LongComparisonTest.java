@@ -22,7 +22,10 @@ public class LongComparisonTest {
 
     @BeforeClass
     public void setup() {
-        longComp = new LongCompare(10l);
+        byte[] lBytes = new byte[8];
+        ByteBuffer.wrap(lBytes).putLong(10l);
+        longComp = new LongCompare();
+        longComp.init(lBytes);
     }
 
     public byte[] getBytes(long val) {

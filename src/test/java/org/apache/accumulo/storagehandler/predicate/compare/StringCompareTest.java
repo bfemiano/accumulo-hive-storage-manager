@@ -23,9 +23,9 @@ public class StringCompareTest {
 
     @BeforeClass
     public void setup() {
-        strCompare = new StringCompare("aaa");
+        strCompare = new StringCompare();
+        strCompare.init("aaa".getBytes());
     }
-
 
     @Test
     public void equal() {

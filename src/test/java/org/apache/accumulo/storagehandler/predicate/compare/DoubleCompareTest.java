@@ -24,7 +24,10 @@ public class DoubleCompareTest {
 
     @BeforeClass
     public void setup() {
-        doubleCompare = new DoubleCompare(10.5d);
+        doubleCompare = new DoubleCompare();
+        byte[] db = new byte[8];
+        ByteBuffer.wrap(db).putDouble(10.5d);
+        doubleCompare.init(db);
     }
 
     public byte[] getBytes(double val) {

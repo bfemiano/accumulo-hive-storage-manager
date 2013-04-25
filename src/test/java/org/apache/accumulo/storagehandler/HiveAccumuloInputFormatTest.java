@@ -6,6 +6,7 @@ import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -55,6 +56,8 @@ public class HiveAccumuloInputFormatTest {
         conf.set(AccumuloSerde.USER_PASS, PASS);
         conf.set(AccumuloSerde.ZOOKEEPERS, "localhost:2181"); //not used for mock, but required by input format.
         conf.set(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2");
+        conf.set(serdeConstants.LIST_COLUMNS, "f1,f2");
+        conf.set(serdeConstants.LIST_COLUMN_TYPES, "string,string");
         try {
             Connector con = mockInstance.getConnector(USER, PASS.getBytes());
             con.tableOperations().create(TEST_TABLE);

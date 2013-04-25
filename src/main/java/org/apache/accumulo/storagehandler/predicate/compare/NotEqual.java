@@ -9,19 +9,19 @@ package org.apache.accumulo.storagehandler.predicate.compare;
  */
 public class NotEqual implements CompareOp {
 
-    private PrimativeCompare comp;
+    private PrimitiveCompare comp;
 
-    public NotEqual(PrimativeCompare comp) {
+    public NotEqual(PrimitiveCompare comp) {
         this.comp = comp;
     }
 
     @Override
-    public void setPrimativeCompare(PrimativeCompare comp) {
+    public void setPrimativeCompare(PrimitiveCompare comp) {
         this.comp = comp;
     }
 
     @Override
-    public PrimativeCompare getPrimativeCompare() {
+    public PrimitiveCompare getPrimativeCompare() {
         return comp;
     }
 

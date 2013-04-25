@@ -9,21 +9,21 @@ package org.apache.accumulo.storagehandler.predicate.compare;
  */
 public class Equal implements CompareOp {
 
-    private PrimativeCompare comp;
+    private PrimitiveCompare comp;
 
     public Equal(){}
 
-    public Equal(PrimativeCompare comp) {
+    public Equal(PrimitiveCompare comp) {
         this.comp  = comp;
     }
 
     @Override
-    public void setPrimativeCompare(PrimativeCompare comp) {
+    public void setPrimativeCompare(PrimitiveCompare comp) {
         this.comp = comp;
     }
 
     @Override
-    public PrimativeCompare getPrimativeCompare() {
+    public PrimitiveCompare getPrimativeCompare() {
         return comp;
     }
 

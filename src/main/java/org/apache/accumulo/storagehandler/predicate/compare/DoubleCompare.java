@@ -10,12 +10,13 @@ import java.nio.ByteBuffer;
  * Time: 1:02 AM
  * To change this template use File | Settings | File Templates.
  */
-public class DoubleCompare implements PrimativeCompare {
+public class DoubleCompare implements PrimitiveCompare {
 
     private BigDecimal constant;
 
-    public DoubleCompare(double constant) {
-        this.constant = BigDecimal.valueOf(constant);
+
+    public void init(byte[] constant) {
+        this.constant = serialize(constant);
     }
 
     public BigDecimal serialize(byte[] value) {

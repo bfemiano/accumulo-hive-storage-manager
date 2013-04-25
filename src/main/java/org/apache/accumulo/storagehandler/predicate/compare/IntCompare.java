@@ -9,12 +9,13 @@ import java.nio.ByteBuffer;
  * Time: 1:02 AM
  * To change this template use File | Settings | File Templates.
  */
-public class IntCompare implements PrimativeCompare {
+public class IntCompare implements PrimitiveCompare {
 
     private int constant;
 
-    public IntCompare(int constant) {
-        this.constant = constant;
+    @Override
+    public void init(byte[] constant) {
+       this.constant = serialize(constant);
     }
 
     @Override

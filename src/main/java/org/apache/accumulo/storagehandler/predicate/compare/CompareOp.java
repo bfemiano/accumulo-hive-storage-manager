@@ -9,7 +9,7 @@ package org.apache.accumulo.storagehandler.predicate.compare;
  */
 public interface CompareOp {
 
-    public void setPrimativeCompare(PrimativeCompare comp);
-    public PrimativeCompare getPrimativeCompare();
+    public void setPrimativeCompare(PrimitiveCompare comp);
+    public PrimitiveCompare getPrimativeCompare();
     public boolean accept(byte [] val);
 }

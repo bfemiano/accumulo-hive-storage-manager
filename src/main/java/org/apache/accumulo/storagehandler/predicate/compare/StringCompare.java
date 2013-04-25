@@ -9,12 +9,14 @@ import java.util.regex.Pattern;
  * Time: 1:39 AM
  * To change this template use File | Settings | File Templates.
  */
-public class StringCompare implements PrimativeCompare {
+public class StringCompare implements PrimitiveCompare {
 
     private String constant;
 
-    public StringCompare(String constant) {
-        this.constant = constant;
+
+    @Override
+    public void init(byte[] constant) {
+        this.constant = serialize(constant);
     }
 
     @Override

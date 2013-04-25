@@ -31,6 +31,7 @@ public class AccumuloSerde implements SerDe {
     public static final String ZOOKEEPERS = "accumulo.zookeepers";
     public static final String INSTANCE_ID = "accumulo.instance.id";
     public static final String COLUMN_MAPPINGS = "accumulo.columns.mapping";
+    public static final String NO_ITERATOR_PUSHDOWN = "no.iterators.on.where.clause";
     public static final String MORE_ACCUMULO_THAN_HIVE = "You have more " + COLUMN_MAPPINGS + " fields than hive columns";
     public static final String MORE_HIVE_THAN_ACCUMULO = "You have more hive columns than fields mapped with " + COLUMN_MAPPINGS;
     private LazySimpleSerDe.SerDeParameters serDeParameters;
