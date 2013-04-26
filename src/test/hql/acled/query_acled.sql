@@ -18,8 +18,11 @@ DROP TABLE IF EXISTS acled;
 CREATE EXTERNAL TABLE acled(rowid STRING, lat DOUBLE, lon DOUBLE, loc STRING, src STRING, type STRING) 
 STORED BY 'org.apache.accumulo.storagehandler.AccumuloStorageHandler' 
 WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'rowID,cf|lat,cf|lon,cf|loc,cf|src,cf|type', 
+	'accumulo.no.iterators' = 'true',
 	'accumulo.table.name' = 'acled'); 
-	
-select count(1) from acled where type = 'Violence against civilians' and lon > 84.4;
+		
+select count(1) from acled where type = 'Violence against civilians';
+
+select rowid,lat,lon from acled where rowid <= '00994539383333_9223370815921975807'
 
 

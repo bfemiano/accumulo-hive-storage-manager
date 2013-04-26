@@ -11,6 +11,8 @@ public class GreaterThanOrEqual implements CompareOp {
 
     private PrimitiveCompare comp;
 
+    public GreaterThanOrEqual(){}
+
     public GreaterThanOrEqual(PrimitiveCompare comp) {
         this.comp = comp;
     }

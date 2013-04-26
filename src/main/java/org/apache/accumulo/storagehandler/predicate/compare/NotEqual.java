@@ -11,6 +11,8 @@ public class NotEqual implements CompareOp {
 
     private PrimitiveCompare comp;
 
+    public NotEqual(){}
+
     public NotEqual(PrimitiveCompare comp) {
         this.comp = comp;
     }

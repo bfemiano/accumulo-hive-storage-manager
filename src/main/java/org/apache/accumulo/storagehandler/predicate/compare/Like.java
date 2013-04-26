@@ -11,6 +11,8 @@ public class Like implements CompareOp {
 
     PrimitiveCompare comp;
 
+    public Like(){}
+
     public Like(PrimitiveCompare comp) {
         this.comp = comp;
     }

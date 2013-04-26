@@ -11,6 +11,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.util.Pair;
 import org.apache.accumulo.core.util.PeekingIterator;
 import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
+import org.apache.accumulo.storagehandler.predicate.PrimativeComparisonFilter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -26,9 +27,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -140,6 +139,7 @@ public class HiveAccumuloTableInputFormat
                     <Text,PeekingIterator<Map.Entry<Key,Value>>> recordReader =
                     createRecordReader(ris, tac);
             recordReader.initialize(ris, tac);
+            final int itrCount = getIterators(job).size();
 
             return new RecordReader<Text, AccumuloHiveRow>() {
 
@@ -180,28 +180,52 @@ public class HiveAccumuloTableInputFormat
                 }
 
                 @Override
-                public boolean next(Text rowKey, AccumuloHiveRow value) throws IOException {
+                public boolean next(Text rowKey, AccumuloHiveRow row) throws IOException {
                     boolean next;
                     try {
-
                         next = recordReader.nextKeyValue();
                         Text key = recordReader.getCurrentKey();
                         PeekingIterator<Map.Entry<Key,Value>> iter = recordReader.getCurrentValue();
                         if(next) {
-                            value.clear();
-                            value.setRowId(key.toString());
+                            row.clear();
+                            row.setRowId(key.toString());
+                            List<Key> keys = Lists.newArrayList();
+                            List<Value> values = Lists.newArrayList();
                             while(iter.hasNext()) {
                                 Map.Entry<Key, Value> kv = iter.next();
-                                value.add(kv.getKey().getColumnFamily().toString(),
-                                        kv.getKey().getColumnQualifier().toString(),
-                                        kv.getValue().get());
+                                keys.add(kv.getKey());
+                                values.add(kv.getValue());
+
+                            }
+                            if(itrCount == 0) {
+                                pushToValue(keys, values, row);
+                            }
+                            else {
+                                for(int i = 0; i < itrCount; i++) {
+                                    log.info("attempting to decode");
+                                    SortedMap<Key,Value> decoded = PrimativeComparisonFilter.decodeRow(keys.get(0), values.get(0));
+                                    keys = Lists.newArrayList(decoded.keySet());
+                                    values = Lists.newArrayList(decoded.values());
+                                }
+                                pushToValue(keys, values, row);
                             }
                         }
-
                     } catch (InterruptedException e) {
                         throw new IOException(StringUtils.stringifyException(e));
                     }
                     return next;
+                }
+
+                private void pushToValue(List<Key> keys, List<Value> values, AccumuloHiveRow row) {
+                    Iterator<Key> kIter = keys.iterator();
+                    Iterator<Value> vIter = values.iterator();
+                    while(kIter.hasNext()) {
+                        Key k = kIter.next();
+                        Value v = vIter.next();
+                        row.add(k.getColumnFamily().toString(),
+                                k.getColumnQualifier().toString(),
+                                v.get());
+                    }
                 }
             };
 

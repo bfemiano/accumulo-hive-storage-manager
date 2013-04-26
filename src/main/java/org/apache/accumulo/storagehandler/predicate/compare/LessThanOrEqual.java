@@ -11,6 +11,8 @@ public class LessThanOrEqual implements CompareOp {
 
     private PrimitiveCompare comp;
 
+    public LessThanOrEqual(){}
+
     public LessThanOrEqual(PrimitiveCompare comp) {
         this.comp = comp;
     }

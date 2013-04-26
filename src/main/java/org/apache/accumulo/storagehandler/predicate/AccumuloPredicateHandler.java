@@ -11,6 +11,7 @@ import org.apache.accumulo.storagehandler.predicate.compare.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.hive.ql.exec.ExprNodeConstantEvaluator;
 import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.ql.index.IndexPredicateAnalyzer;
 import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -23,6 +24,7 @@ import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler.*;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -49,8 +51,8 @@ public class AccumuloPredicateHandler {
         compareOps.put(GenericUDFOPNotEqual.class.getName(), NotEqual.class);
         compareOps.put(GenericUDFOPGreaterThan.class.getName(), GreaterThan.class);
         compareOps.put(GenericUDFOPEqualOrGreaterThan.class.getName(), GreaterThanOrEqual.class);
-        compareOps.put(GenericUDFOPEqualOrLessThan.class.getName(), LessThan.class);
-        compareOps.put(GenericUDFOPLessThan.class.getName(), LessThanOrEqual.class);
+        compareOps.put(GenericUDFOPEqualOrLessThan.class.getName(), LessThanOrEqual.class);
+        compareOps.put(GenericUDFOPLessThan.class.getName(), LessThan.class);
         compareOps.put(UDFLike.class.getName(), Like.class);
 
         pComparisons.put("bigint", LongCompare.class);
@@ -94,12 +96,11 @@ public class AccumuloPredicateHandler {
      */
     public Collection<Range> getRanges(JobConf conf)
         throws SerDeException {
-        List<IndexSearchCondition> sConditions = Lists.newArrayList();
         List<Range> ranges = Lists.newArrayList();
         String rowIdCol = AccumuloHiveUtils.hiveColForRowID(conf);
         if(rowIdCol == null)
             return ranges;
-        for(IndexSearchCondition sc : sConditions) {
+        for(IndexSearchCondition sc : getSearchConditions(conf)) {
             if(rowIdCol.equals(sc.getColumnDesc().getColumn()))
                 ranges.add(toRange(sc));
         }
@@ -110,6 +111,7 @@ public class AccumuloPredicateHandler {
             throws SerDeException{
         List<IteratorSetting> itrs = Lists.newArrayList();
         if(conf.get(AccumuloSerde.NO_ITERATOR_PUSHDOWN) != null)  {
+            log.info("Iterator pushdown is disabled for this table");
             return itrs;
         }
 
@@ -132,7 +134,7 @@ public class AccumuloPredicateHandler {
         PushdownTuple tuple = new PushdownTuple(sc);
         Text constText = new Text(tuple.getConstVal());
         if(tuple.getcOpt() instanceof Equal) {
-            range = new Range(constText, true, constText, false); //start inclusive - start exclusive
+            range = new Range(constText, true, constText, true); //start inclusive - end inclusive
         } else if (tuple.getcOpt() instanceof GreaterThanOrEqual) {
             range = new Range(constText, null); //start inclusive to infinity inclusive
         } else if (tuple.getcOpt() instanceof GreaterThan) {
@@ -168,7 +170,7 @@ public class AccumuloPredicateHandler {
         if(filteredExprSerialized == null)
             return sConditions;
         ExprNodeDesc filterExpr = Utilities.deserializeExpression(filteredExprSerialized, conf);
-
+        log.info("expr type: " + filterExpr.getClass().getName());
         IndexPredicateAnalyzer analyzer = newAnalyzer(conf);
         log.info("full expression string: " + filterExpr.getExprString());
         for(ExprNodeDesc exp : filterExpr.getChildren()) {
@@ -232,15 +234,17 @@ public class AccumuloPredicateHandler {
                 String type = sc.getColumnDesc().getTypeString();
                 Class<? extends PrimitiveCompare> pClass = pComparisons.get(type);
                 Class<? extends CompareOp> cClass = compareOps.get(sc.getComparisonOp());
-                if(cClass == null || pClass == null)
-                    throw new SerDeException("getcOpt and/or getpCompare objects not found for combo" +
-                            " (" + sc.getComparisonOp() + "," + type + ")");
+                if(cClass == null)
+                    throw new SerDeException("no CompareOp subclass mapped for operation: " + sc.getComparisonOp());
+                if(pClass == null)
+                    throw new SerDeException("no PrimitiveCompare subclass mapped for type: " + type);
                 pCompare = pClass.newInstance();
                 cOpt = cClass.newInstance();
                 Writable writable  = (Writable)eval.evaluate(null);
                 constVal = getConstantAsBytes(writable);
             } catch (ClassCastException cce) {
-                throw new SerDeException("Currently only primitive types are supported. Found: " +
+                log.info(StringUtils.stringifyException(cce));
+                throw new SerDeException("Currently only int,double,string,bigint types are supported. Found: " +
                         sc.getConstantDesc().getTypeString());
             } catch (HiveException e) {
                 throw new SerDeException(e);

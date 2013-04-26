@@ -11,6 +11,8 @@ public class GreaterThan implements CompareOp {
 
     private PrimitiveCompare comp;
 
+    public GreaterThan(){}
+
     public GreaterThan(PrimitiveCompare comp) {
         this.comp = comp;
     }

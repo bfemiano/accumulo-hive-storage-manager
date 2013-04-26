@@ -234,7 +234,7 @@ public class AccumuloStorageHandler
                                                   Deserializer deserializer,
                                                   ExprNodeDesc desc) {
         log.info("Calling decompose predicate");
-        if(conf.get(AccumuloSerde.NO_ITERATOR_PUSHDOWN) != null){
+        if(conf.get(AccumuloSerde.NO_ITERATOR_PUSHDOWN) == null){
             return predicateHandler.decompose(conf, desc);
         } else {
             log.info("Set to ignore iterator. skipping predicate handler");
