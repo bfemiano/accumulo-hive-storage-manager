@@ -7,7 +7,6 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.storagehandler.AccumuloSerde;
 import org.apache.accumulo.storagehandler.predicate.compare.*;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.plan.*;
@@ -19,8 +18,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
@@ -427,12 +424,12 @@ public class PredicateHandlerTest {
             boolean foundConst = false;
             for(Map.Entry<String, String> option : is1.getOptions().entrySet()) {
                 String optKey = option.getKey();
-                if(optKey.equals(PrimativeComparisonFilter.QUAL)) {
+                if(optKey.equals(PrimativeComparisonFilter.COLUMN)) {
                     foundQual = true;
                     assertEquals(option.getValue(), "cf|f1");
                 } else if (optKey.equals(PrimativeComparisonFilter.CONST_VAL)) {
                     foundConst = true;
-                    assertEquals(option.getValue(), Arrays.toString(Base64.encodeBase64("aaa".getBytes())));
+                    assertEquals(option.getValue(), new String(Base64.encodeBase64("aaa".getBytes())));
                 } else if (optKey.equals(PrimativeComparisonFilter.COMPARE_OPT_CLASS)) {
                     foundCOpt = true;
                     assertEquals(option.getValue(), LessThanOrEqual.class.getName());
@@ -450,14 +447,14 @@ public class PredicateHandlerTest {
             foundConst = false;
             for(Map.Entry<String, String> option : is2.getOptions().entrySet()) {
                 String optKey = option.getKey();
-                if(optKey.equals(PrimativeComparisonFilter.QUAL)) {
+                if(optKey.equals(PrimativeComparisonFilter.COLUMN)) {
                     foundQual = true;
                     assertEquals(option.getValue(), "cf|f2");
                 } else if (optKey.equals(PrimativeComparisonFilter.CONST_VAL)) {
                     foundConst = true;
                     byte [] intVal = new byte[4];
                     ByteBuffer.wrap(intVal).putInt(5);
-                    assertEquals(option.getValue(), Arrays.toString(Base64.encodeBase64(intVal)));
+                    assertEquals(option.getValue(), new String(Base64.encodeBase64(intVal)));
                 } else if (optKey.equals(PrimativeComparisonFilter.COMPARE_OPT_CLASS)) {
                     foundCOpt = true;
                     assertEquals(option.getValue(), GreaterThan.class.getName());

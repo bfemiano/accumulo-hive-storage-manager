@@ -6,15 +6,12 @@ import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.iterators.WholeRowIterator;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
 import org.apache.accumulo.storagehandler.predicate.PrimativeComparisonFilter;
 import org.apache.accumulo.storagehandler.predicate.compare.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -24,13 +21,10 @@ import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
 import org.datanucleus.sco.backed.Map;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
 import java.util.SortedMap;
 
 import static org.testng.Assert.*;
@@ -216,7 +210,7 @@ public class HiveAccumuloInputFormatTest {
             is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, DoubleCompare.class.getName());
             is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, GreaterThanOrEqual.class.getName());
             is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseDoubleBytes("55.6"))));
-            is.addOption(PrimativeComparisonFilter.QUAL, "dgrs");
+            is.addOption(PrimativeComparisonFilter.COLUMN, "cf|dgrs");
             scan.addScanIterator(is);
 
             IteratorSetting is2 = new IteratorSetting(2, PrimativeComparisonFilter.FILTER_PREFIX + 2,
@@ -225,7 +219,7 @@ public class HiveAccumuloInputFormatTest {
             is2.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, LongCompare.class.getName());
             is2.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, LessThan.class.getName());
             is2.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseLongBytes("778"))));
-            is2.addOption(PrimativeComparisonFilter.QUAL, "mills");
+            is2.addOption(PrimativeComparisonFilter.COLUMN, "cf|mills");
 
             scan.addScanIterator(is2);
 
@@ -281,7 +275,7 @@ public class HiveAccumuloInputFormatTest {
             is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, IntCompare.class.getName());
             is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, GreaterThan.class.getName());
             is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseIntBytes("1"))));
-            is.addOption(PrimativeComparisonFilter.QUAL, "sid");
+            is.addOption(PrimativeComparisonFilter.COLUMN, "cf|sid");
             scan.addScanIterator(is);
             boolean foundMark = false;
             boolean foundDennis = false;
@@ -335,7 +329,7 @@ public class HiveAccumuloInputFormatTest {
             is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, StringCompare.class.getName());
             is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, Equal.class.getName());
             is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64("brian".getBytes())));
-            is.addOption(PrimativeComparisonFilter.QUAL, "name");
+            is.addOption(PrimativeComparisonFilter.COLUMN, "cf|name");
             scan.addScanIterator(is);
             boolean foundName = false;
             boolean foundSid = false;

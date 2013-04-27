@@ -1,5 +1,8 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
+import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
+import org.apache.log4j.Logger;
+
 import java.util.regex.Pattern;
 
 /**
@@ -12,7 +15,7 @@ import java.util.regex.Pattern;
 public class StringCompare implements PrimitiveCompare {
 
     private String constant;
-
+    private static final Logger log = Logger.getLogger(StringCompare.class);
 
     @Override
     public void init(byte[] constant) {
@@ -21,6 +24,9 @@ public class StringCompare implements PrimitiveCompare {
 
     @Override
     public boolean isEqual(byte[] value) {
+        String val = serialize(value);
+        log.info("val: " + val);
+        log.info("constant: " + constant);
         return serialize(value).equals(constant);
     }
 

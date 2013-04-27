@@ -3,7 +3,6 @@ package org.apache.accumulo.storagehandler.predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.accumulo.core.client.IteratorSetting;
-import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.storagehandler.AccumuloHiveUtils;
 import org.apache.accumulo.storagehandler.AccumuloSerde;
@@ -41,10 +40,11 @@ import java.util.*;
 public class AccumuloPredicateHandler {
 
     private static AccumuloPredicateHandler handler = new AccumuloPredicateHandler();
-    private static final Logger log = Logger.getLogger(AccumuloPredicateHandler.class);
     private static Map<String, Class<? extends CompareOp>> compareOps = Maps.newHashMap();
     private static Map<String, Class<? extends PrimitiveCompare>> pComparisons = Maps.newHashMap();
     private static int iteratorCount = 0;
+
+    private static final Logger log = Logger.getLogger(AccumuloPredicateHandler.class);
     static {
         log.setLevel(Level.INFO);
         compareOps.put(GenericUDFOPEqual.class.getName(), Equal.class);
@@ -120,10 +120,10 @@ public class AccumuloPredicateHandler {
             log.info(sc.getComparisonExpr().getExprString());
             log.info("comp op " + sc.getComparisonOp());
             log.info("const " + sc.getConstantDesc());
-            log.info("num iterators = " + itrs.size());
             String col = sc.getColumnDesc().getColumn();
             if(rowIdCol == null || !rowIdCol.equals(col))
                 itrs.add(toSetting(conf, col, sc));
+            log.info("num iterators = " + itrs.size());
         }
         return itrs;
     }
@@ -158,8 +158,8 @@ public class AccumuloPredicateHandler {
         PushdownTuple tuple = new PushdownTuple(sc);
         is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, tuple.getpCompare().getClass().getName());
         is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, tuple.getcOpt().getClass().getName());
-        is.addOption(PrimativeComparisonFilter.CONST_VAL,  Arrays.toString(Base64.encodeBase64(tuple.getConstVal())));
-        is.addOption(PrimativeComparisonFilter.QUAL, AccumuloHiveUtils.hiveToAccumulo(hiveCol, conf));
+        is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(tuple.getConstVal())));
+        is.addOption(PrimativeComparisonFilter.COLUMN, AccumuloHiveUtils.hiveToAccumulo(hiveCol, conf));
 
         return is;
     }
