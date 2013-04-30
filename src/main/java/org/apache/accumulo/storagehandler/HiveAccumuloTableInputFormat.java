@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -100,7 +101,7 @@ public class HiveAccumuloTableInputFormat
 
     @Override
     public RecordReader<Text, AccumuloHiveRow> getRecordReader(InputSplit inputSplit,
-                                                               JobConf jobConf,
+                                                               final JobConf jobConf,
                                                                final Reporter reporter) throws IOException {
 
 
@@ -216,15 +217,16 @@ public class HiveAccumuloTableInputFormat
                     return next;
                 }
 
-                private void pushToValue(List<Key> keys, List<Value> values, AccumuloHiveRow row) {
+                private void pushToValue(List<Key> keys, List<Value> values, AccumuloHiveRow row)
+                        throws IOException {
                     Iterator<Key> kIter = keys.iterator();
                     Iterator<Value> vIter = values.iterator();
                     while(kIter.hasNext()) {
                         Key k = kIter.next();
                         Value v = vIter.next();
+                        byte[] utf8Val = AccumuloHiveUtils.valueAsUTF8bytes(jobConf, k, v);
                         row.add(k.getColumnFamily().toString(),
-                                k.getColumnQualifier().toString(),
-                                v.get());
+                                k.getColumnQualifier().toString(),utf8Val);
                     }
                 }
             };

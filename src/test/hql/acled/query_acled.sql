@@ -15,13 +15,11 @@ add jar /Users/bfemiano/cloud/accumulo-trunk/trunk/lib/accumulo-start-1.6.0-SNAP
 add jar /Users/bfemiano/cloud/accumulo-trunk/trunk/lib/accumulo-hive-storage-handler-1.6.0-SNAPSHOT.jar;
 
 DROP TABLE IF EXISTS acled;
-CREATE EXTERNAL TABLE acled(rowid STRING, lat DOUBLE, lon DOUBLE, loc STRING, src STRING, type STRING) 
+CREATE EXTERNAL TABLE acled(rowid STRING, lat DOUBLE, lon DOUBLE, loc STRING, src STRING, type STRING, fid INT, pid BIGINT) 
 STORED BY 'org.apache.accumulo.storagehandler.AccumuloStorageHandler' 
-WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'rowID,cf|lat,cf|lon,cf|loc,cf|src,cf|type',
+WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'rowID,cf|lat,cf|lon,cf|loc,cf|src,cf|type,cf|fid,cf|pid',
 	'accumulo.table.name' = 'acled'); 
 		
-select count(1) from acled where type = 'Violence against civilians';
-
-select rowid,lat,lon from acled where rowid <= '00994539383333_9223370815921975807'
+select type,lat,lon from acled where type like '%civilians' and fid = 20;
 
 

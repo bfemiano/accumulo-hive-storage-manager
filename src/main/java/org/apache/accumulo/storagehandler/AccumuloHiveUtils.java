@@ -3,7 +3,11 @@ package org.apache.accumulo.storagehandler;
 import com.google.common.collect.Lists;
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.impl.Writer;
+import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
+import org.apache.accumulo.storagehandler.predicate.compare.PrimitiveCompare;
 import org.apache.commons.cli.MissingArgumentException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -11,7 +15,9 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -27,7 +33,6 @@ public class AccumuloHiveUtils {
     public static final int WRITER_NUM_THREADS = 10;
     private static final String ROWID = "rowID";
     private static final Pattern COMMA = Pattern.compile("[,]");
-
 
     public static String getFromConf(Configuration conf, String property)
             throws MissingArgumentException {
@@ -131,6 +136,28 @@ public class AccumuloHiveUtils {
                 return types.get(i);
         }
         throw new IllegalArgumentException("not type index found for column: " + col);
+    }
+
+    public static byte[] valueAsUTF8bytes(JobConf conf, Key k, Value v)
+            throws IOException {
+        String cf = k.getColumnFamily().toString();
+        String qual = k.getColumnQualifier().toString();
+        String combined = cf + "|" + qual;
+        String type = hiveColType(accumuloToHive(combined, conf), conf);
+        if(type.equals("string")) {
+            return v.get();
+        } else if (type.equals("int")) {
+            int val = ByteBuffer.wrap(v.get()).asIntBuffer().get();
+            return String.valueOf(val).getBytes();
+        } else if (type.equals("double")) {
+            double val = ByteBuffer.wrap(v.get()).asDoubleBuffer().get();
+            return String.valueOf(val).getBytes();
+        } else if (type.equals("bigint")) {
+            long val = ByteBuffer.wrap(v.get()).asLongBuffer().get();
+            return String.valueOf(val).getBytes();
+        } else {
+            throw new IOException("Unsupported type: " + type + " currently only string,int,long,double supported");
+        }
     }
 
     public static Connector getConnector(Configuration conf)

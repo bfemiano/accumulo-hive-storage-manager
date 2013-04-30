@@ -152,7 +152,8 @@ public class AccumuloPredicateHandler {
 
     public IteratorSetting toSetting(JobConf conf, String hiveCol, IndexSearchCondition sc)
             throws SerDeException{
-        IteratorSetting is = new IteratorSetting(1, PrimativeComparisonFilter.FILTER_PREFIX + iteratorCount++,
+        iteratorCount++;
+        IteratorSetting is = new IteratorSetting(iteratorCount, PrimativeComparisonFilter.FILTER_PREFIX + iteratorCount,
                 PrimativeComparisonFilter.class);
 
         PushdownTuple tuple = new PushdownTuple(sc);
@@ -244,8 +245,8 @@ public class AccumuloPredicateHandler {
                 constVal = getConstantAsBytes(writable);
             } catch (ClassCastException cce) {
                 log.info(StringUtils.stringifyException(cce));
-                throw new SerDeException("Currently only int,double,string,bigint types are supported. Found: " +
-                        sc.getConstantDesc().getTypeString());
+                throw new SerDeException(" Column type mismatch in where clause " + sc.getComparisonExpr().getExprString()
+                        + " found type " + sc.getConstantDesc().getTypeString() + " instead of " + sc.getColumnDesc().getTypeString());
             } catch (HiveException e) {
                 throw new SerDeException(e);
             } catch (InstantiationException e) {

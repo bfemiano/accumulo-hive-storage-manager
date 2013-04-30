@@ -38,9 +38,9 @@ public class HiveAccumuloInputFormatTest {
 
 
     private Instance mockInstance;
-    public static final String MOCK_INSTANCE_NAME = "test_instance";
+    public static final String MOCK_INSTANCE_NAME = "test";
     public static final String USER = "user";
-    public static final String PASS = "pass";
+    public static final String PASS = "password";
     public static final String TEST_TABLE = "table1";
     public static final Text COLUMN_FAMILY = new Text("cf");
     private static final Text NAME = new Text("name");
@@ -51,6 +51,36 @@ public class HiveAccumuloInputFormatTest {
     private JobConf conf;
 
     private static final Logger log = Logger.getLogger(HiveAccumuloInputFormatTest.class);
+
+    //@Test
+    public void getBytesValues() {
+        ZooKeeperInstance zooInst = new ZooKeeperInstance(MOCK_INSTANCE_NAME, "localhost:2181");
+        try {
+            Connector con = zooInst.getConnector(USER, new PasswordToken(PASS.getBytes()));
+            Scanner scan = con.createScanner("acled", new Authorizations());
+            for(Map.Entry<Key,Value> item : scan) {
+                log.info(item.getKey().getColumnQualifier());
+                if(item.getKey().getColumnQualifier().toString().equals("lat") ||
+                        item.getKey().getColumnQualifier().toString().equals("lon")) {
+                    double val = ByteBuffer.wrap(item.getValue().get()).asDoubleBuffer().get();
+                    log.info(val);
+                }  else if(item.getKey().getColumnQualifier().toString().equals("fid")) {
+                    int val = ByteBuffer.wrap(item.getValue().get()).asIntBuffer().get();
+                    log.info(val);
+                } else if(item.getKey().getColumnQualifier().toString().equals("pid")) {
+                    long val = ByteBuffer.wrap(item.getValue().get()).asLongBuffer().get();
+                    log.info(val);
+                }
+                log.info("-----");
+            }
+        } catch (AccumuloSecurityException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (AccumuloException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (TableNotFoundException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
 
     @BeforeClass
     public void createMockKeyValues() {
@@ -152,11 +182,11 @@ public class HiveAccumuloInputFormatTest {
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), NAME.toString()));
             assertEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "brian".getBytes());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), SID.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), SID.toString()), parseIntBytes("1"));
+            assertEquals(row.getValue(COLUMN_FAMILY.toString(), SID.toString()), "1".getBytes());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), DEGREES.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), DEGREES.toString()), parseDoubleBytes("44.5"));
+            assertEquals(row.getValue(COLUMN_FAMILY.toString(), DEGREES.toString()), "44.5".getBytes());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), MILLIS.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), MILLIS.toString()), parseLongBytes("555"));
+            assertEquals(row.getValue(COLUMN_FAMILY.toString(), MILLIS.toString()), "555".getBytes());
 
         } catch (IOException e) {
             log.error(e);
