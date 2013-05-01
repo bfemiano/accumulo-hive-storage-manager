@@ -16,7 +16,7 @@ have to do until Accumulo 1.5+ is hosted in maven central.
 Documentation:
 =================
 
-<a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Java docs</a>
+<a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a>
 
 <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/examples">Basic tutorial</a>
 
