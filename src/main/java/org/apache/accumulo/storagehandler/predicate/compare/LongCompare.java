@@ -3,11 +3,12 @@ package org.apache.accumulo.storagehandler.predicate.compare;
 import java.nio.ByteBuffer;
 
 /**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/22/13
- * Time: 1:01 AM
- * To change this template use File | Settings | File Templates.
+ *
+ * Set of comparison operations over a long constant. Used for Hive
+ * predicates involving long comparison.
+ *
+ * Used by {@link org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter}
+ *
  */
 public class LongCompare implements PrimitiveCompare {
 

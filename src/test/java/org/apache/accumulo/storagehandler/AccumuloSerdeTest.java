@@ -36,7 +36,7 @@ public class AccumuloSerdeTest {
             serde.deserialize(new Text("fail"));
             fail("Should fail. More hive columns than total Accumulo mapping");
         } catch (SerDeException e) {
-            assertTrue(e.getMessage().contains(AccumuloSerde.MORE_HIVE_THAN_ACCUMULO));
+            assertTrue(e.getMessage().contains("You have more hive columns than fields mapped with " + AccumuloSerde.COLUMN_MAPPINGS));
         }
 
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|f2,cf|f3");
@@ -47,7 +47,7 @@ public class AccumuloSerdeTest {
             serde.deserialize(new Text("fail"));
             fail("Should fail, More Accumulo mapping than total hive columns.");
         } catch (SerDeException e) {
-            assertTrue(e.getMessage().contains(AccumuloSerde.MORE_ACCUMULO_THAN_HIVE));
+            assertTrue(e.getMessage().contains("You have more " + AccumuloSerde.COLUMN_MAPPINGS + " fields than hive columns"));
         }
     }
 

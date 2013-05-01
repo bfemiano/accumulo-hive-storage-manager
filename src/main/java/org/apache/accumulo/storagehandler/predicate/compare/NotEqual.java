@@ -1,11 +1,10 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
 /**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/22/13
- * Time: 1:40 AM
- * To change this template use File | Settings | File Templates.
+ *
+ * Wraps call to isEqual over {@link PrimitiveCompare} instance and returns the negation.
+ *
+ * Used by {@link org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter}
  */
 public class NotEqual implements CompareOp {
 
@@ -18,12 +17,12 @@ public class NotEqual implements CompareOp {
     }
 
     @Override
-    public void setPrimativeCompare(PrimitiveCompare comp) {
+    public void setPrimitiveCompare(PrimitiveCompare comp) {
         this.comp = comp;
     }
 
     @Override
-    public PrimitiveCompare getPrimativeCompare() {
+    public PrimitiveCompare getPrimitiveCompare() {
         return comp;
     }
 

@@ -424,16 +424,16 @@ public class PredicateHandlerTest {
             boolean foundConst = false;
             for(Map.Entry<String, String> option : is1.getOptions().entrySet()) {
                 String optKey = option.getKey();
-                if(optKey.equals(PrimativeComparisonFilter.COLUMN)) {
+                if(optKey.equals(PrimitiveComparisonFilter.COLUMN)) {
                     foundQual = true;
                     assertEquals(option.getValue(), "cf|f1");
-                } else if (optKey.equals(PrimativeComparisonFilter.CONST_VAL)) {
+                } else if (optKey.equals(PrimitiveComparisonFilter.CONST_VAL)) {
                     foundConst = true;
                     assertEquals(option.getValue(), new String(Base64.encodeBase64("aaa".getBytes())));
-                } else if (optKey.equals(PrimativeComparisonFilter.COMPARE_OPT_CLASS)) {
+                } else if (optKey.equals(PrimitiveComparisonFilter.COMPARE_OPT_CLASS)) {
                     foundCOpt = true;
                     assertEquals(option.getValue(), LessThanOrEqual.class.getName());
-                } else if(optKey.equals(PrimativeComparisonFilter.P_COMPARE_CLASS)) {
+                } else if(optKey.equals(PrimitiveComparisonFilter.P_COMPARE_CLASS)) {
                     foundPCompare = true;
                     assertEquals(option.getValue(), StringCompare.class.getName());
                 }
@@ -447,18 +447,18 @@ public class PredicateHandlerTest {
             foundConst = false;
             for(Map.Entry<String, String> option : is2.getOptions().entrySet()) {
                 String optKey = option.getKey();
-                if(optKey.equals(PrimativeComparisonFilter.COLUMN)) {
+                if(optKey.equals(PrimitiveComparisonFilter.COLUMN)) {
                     foundQual = true;
                     assertEquals(option.getValue(), "cf|f2");
-                } else if (optKey.equals(PrimativeComparisonFilter.CONST_VAL)) {
+                } else if (optKey.equals(PrimitiveComparisonFilter.CONST_VAL)) {
                     foundConst = true;
                     byte [] intVal = new byte[4];
                     ByteBuffer.wrap(intVal).putInt(5);
                     assertEquals(option.getValue(), new String(Base64.encodeBase64(intVal)));
-                } else if (optKey.equals(PrimativeComparisonFilter.COMPARE_OPT_CLASS)) {
+                } else if (optKey.equals(PrimitiveComparisonFilter.COMPARE_OPT_CLASS)) {
                     foundCOpt = true;
                     assertEquals(option.getValue(), GreaterThan.class.getName());
-                } else if(optKey.equals(PrimativeComparisonFilter.P_COMPARE_CLASS)) {
+                } else if(optKey.equals(PrimitiveComparisonFilter.P_COMPARE_CLASS)) {
                     foundPCompare = true;
                     assertEquals(option.getValue(), IntCompare.class.getName());
                 }
@@ -479,7 +479,7 @@ public class PredicateHandlerTest {
         boolean foundGreaterThan = false;
         boolean foundLessThanOrEqual = false;
         boolean foundLessThan = false;
-        for(String opt : handler.compareOpKeyset()) {
+        for(String opt : handler.cOpKeyset()) {
             Class<? extends CompareOp> compOpt = handler.getCompareOp(opt);
             if(compOpt.getName().equals(Equal.class.getName())) {
                 foundEqual = true;
@@ -518,7 +518,7 @@ public class PredicateHandlerTest {
         boolean foundInt = false;
         boolean foundDouble = false;
         for(String type : handler.pComparisonKeyset()) {
-            Class<? extends PrimitiveCompare> pCompare = handler.getPrimativeComparison(type);
+            Class<? extends PrimitiveCompare> pCompare = handler.getPrimitiveComparison(type);
             if(pCompare.getName().equals(DoubleCompare.class.getName())) {
                 foundDouble = true;
             } else if (pCompare.getName().equals(LongCompare.class.getName())) {

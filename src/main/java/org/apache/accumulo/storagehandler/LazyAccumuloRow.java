@@ -5,16 +5,16 @@ import org.apache.hadoop.hive.serde2.lazy.objectinspector.LazySimpleStructObject
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.log4j.Logger;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * User: bfemiano
- * Date: 3/2/13
- * Time: 2:26 AM
+ *
+ * Parses column tuples in each AccumuloHiveRow and creates
+ * Lazy objects for each field.
+ *
  */
 public class LazyAccumuloRow extends LazyStruct{
 
@@ -42,8 +42,7 @@ public class LazyAccumuloRow extends LazyStruct{
                     getInspector().getAllStructFieldRefs();
             setFields(new LazyObject[fieldRefs.size()]);
             for (int i = 0; i < getFields().length; i++) {
-                String colQualPair = fetchCols.get(i);
-                //only supports fam:qual pairs for now. cell mapped column familes can come later.
+                //Only supports fam:qual pairs for now. Cell mapped column families not yet supported.
                 getFields()[i] = LazyFactory.createLazyObject(fieldRefs.get(i).getFieldObjectInspector());
             }
             setFieldInited(new boolean[getFields().length]);
@@ -60,15 +59,18 @@ public class LazyAccumuloRow extends LazyStruct{
         return uncheckedGetField(id);
     }
 
+    /*
+        split pairs by pipe.
+     */
     private Object uncheckedGetField(int id) {
         if(!getFieldInited()[id]) {
             getFieldInited()[id] = true;
             ByteArrayRef ref;
             String famQualPair = fetchCols.get(id);
-            if(AccumuloHiveUtils.containsRowID(famQualPair)) {
+            if(AccumuloHiveUtils.containsRowID(famQualPair)) { //rowID field
                 ref = new ByteArrayRef();
                 ref.setData(row.getRowId().getBytes());
-            } else {
+            } else {  //find the matching column tuple.
                 String[] famQualPieces = PIPE.split(famQualPair);
                 if (famQualPieces.length != 2)
                     throw new IllegalArgumentException("Malformed famQualPair: " + famQualPair);

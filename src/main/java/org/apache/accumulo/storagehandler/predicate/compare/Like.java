@@ -1,11 +1,10 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
 /**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/22/13
- * Time: 10:47 PM
- * To change this template use File | Settings | File Templates.
+ *
+ * Wraps call to like over {@link PrimitiveCompare} instance. Currently only supported by StringCompare.
+ *
+ * Used by {@link org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter}
  */
 public class Like implements CompareOp {
 
@@ -18,12 +17,12 @@ public class Like implements CompareOp {
     }
 
     @Override
-    public void setPrimativeCompare(PrimitiveCompare comp) {
+    public void setPrimitiveCompare(PrimitiveCompare comp) {
        this.comp = comp;
     }
 
     @Override
-    public PrimitiveCompare getPrimativeCompare() {
+    public PrimitiveCompare getPrimitiveCompare() {
         return comp;
     }
 

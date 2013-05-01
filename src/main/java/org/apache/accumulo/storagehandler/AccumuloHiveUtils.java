@@ -3,6 +3,7 @@ package org.apache.accumulo.storagehandler;
 import com.google.common.collect.Lists;
 import org.apache.accumulo.core.client.*;
 import org.apache.accumulo.core.client.impl.Writer;
+import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
@@ -22,15 +23,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * User: bfemiano
- * Date: 3/4/13
- * Time: 12:44 AM
+ * Static methods for Hive/Accumulo configuration parsing and lookups.
+ *
  */
 public class AccumuloHiveUtils {
 
-    public static final long WRITER_MAX_MEMORY = 1000000L; // bytes to store before sending a batch
-    public static final long WRITER_TIMEOUT = 1000L; // milliseconds to wait before sending
-    public static final int WRITER_NUM_THREADS = 10;
     private static final String ROWID = "rowID";
     private static final Pattern COMMA = Pattern.compile("[,]");
 
@@ -42,23 +39,11 @@ public class AccumuloHiveUtils {
         return propValue;
     }
 
-    public static BatchWriter createBatchWriter(Configuration conf)
-            throws IOException {
-        try {
-            String table  = getFromConf(conf, AccumuloSerde.TABLE_NAME);
-            Connector connector = getConnector(conf);
-            BatchWriterConfig config = new BatchWriterConfig();
-            config.setMaxLatency(WRITER_TIMEOUT, TimeUnit.MILLISECONDS);
-            config.setMaxMemory(WRITER_MAX_MEMORY);
-            config.setMaxWriteThreads(WRITER_NUM_THREADS);
-            return connector.createBatchWriter(table,config);
-        } catch (MissingArgumentException e){
-            throw new IOException(StringUtils.stringifyException(e));
-        } catch (TableNotFoundException e) {
-            throw new IOException(StringUtils.stringifyException(e));
-        }
-    }
-
+    /**
+     *
+     * @param columnMapping comma-separated list of columns.
+     * @return List<String> columns
+     */
     public static List<String> parseColumnMapping(String columnMapping) {
 
         if(columnMapping == null)
@@ -66,6 +51,10 @@ public class AccumuloHiveUtils {
         return Lists.newArrayList(COMMA.split(columnMapping));
     }
 
+    /**
+     *
+     * @return the Hive column aligned with the accumulo rowID, or null if no column is mapped to rowID.
+     */
     public static String hiveColForRowID (JobConf conf) {
         String hiveColProp = conf.get(serdeConstants.LIST_COLUMNS);
         List<String> hiveCols = AccumuloHiveUtils.parseColumnMapping(hiveColProp);
@@ -76,10 +65,18 @@ public class AccumuloHiveUtils {
         return null;
     }
 
+    /**
+     *
+     * @return true if colName contains 'rowID', false otherwise.
+     */
     public static boolean containsRowID(String colName) {
         return colName.contains(ROWID);
     }
 
+    /**
+     *
+     * @return index of rowID column in Accumulo mapping, or -1 if rowID is not mapped.
+     */
     public static int getRowIdIndex(JobConf conf) {
         int index = -1;
         String accumuloProp = conf.get(AccumuloSerde.COLUMN_MAPPINGS);
@@ -94,6 +91,12 @@ public class AccumuloHiveUtils {
         return index;
     }
 
+    /**
+     *  Translate Hive column to Accumulo column family/qual mapping.
+     *
+     * @param column Hive column to lookup.
+     * @return matching Accumulo column.
+     */
     public static String hiveToAccumulo(String column, JobConf conf) {
         String accumuloProp = conf.get(AccumuloSerde.COLUMN_MAPPINGS);
         String hiveProp = conf.get(serdeConstants.LIST_COLUMNS);
@@ -109,6 +112,12 @@ public class AccumuloHiveUtils {
         throw new IllegalArgumentException("column " + column + " is not mapped in the hive table definition");
     }
 
+    /**
+     * Translate Accumulo column family/qual mapping to Hive column.
+     *
+     * @param column Accumulo column to lookup.
+     * @return matching Hive column.
+     */
     public static String accumuloToHive(String column, JobConf conf) {
         String accumuloProp = conf.get(AccumuloSerde.COLUMN_MAPPINGS);
         String hiveProp = conf.get(serdeConstants.LIST_COLUMNS);
@@ -124,6 +133,10 @@ public class AccumuloHiveUtils {
         throw new IllegalArgumentException("column " + column + " is not mapped in " + AccumuloSerde.COLUMN_MAPPINGS);
     }
 
+    /**
+     *
+     * @return data type for Hive column.
+     */
     public static String hiveColType(String col, JobConf conf) {
         List<String> hiveCols = parseColumnMapping(conf.get(serdeConstants.LIST_COLUMNS));
         List<String> types =  parseColumnMapping(conf.get(serdeConstants.LIST_COLUMN_TYPES));
@@ -138,6 +151,16 @@ public class AccumuloHiveUtils {
         throw new IllegalArgumentException("not type index found for column: " + col);
     }
 
+    /**
+     * For a given column family and qualifier and value, lookup the hive column type that maps
+     * to the qualifier. Assume the value type matches the Hive type, and convert the bytes
+     * to UTF8. This seems to be required by Hive LazyObjects for serialization.
+     *
+     * @param k Accumulo key
+     * @param v Accumulo value
+     * @return value as UTF8 byte array.
+     * @throws IOException
+     */
     public static byte[] valueAsUTF8bytes(JobConf conf, Key k, Value v)
             throws IOException {
         String cf = k.getColumnFamily().toString();
@@ -160,6 +183,13 @@ public class AccumuloHiveUtils {
         }
     }
 
+    /**
+     * Use conf to lookup instance id, user, pass, and zookeepers from conf.
+     * Create and return a connector.
+     *
+     * @return Accumulo connector
+     * @throws IOException
+     */
     public static Connector getConnector(Configuration conf)
             throws IOException {
         try {
@@ -168,7 +198,7 @@ public class AccumuloHiveUtils {
             String pass = getFromConf(conf, AccumuloSerde.USER_PASS);
             String zookeepers = getFromConf(conf, AccumuloSerde.ZOOKEEPERS);
             ZooKeeperInstance inst = new ZooKeeperInstance(instance, zookeepers);
-            return  inst.getConnector(user, pass.getBytes());
+            return  inst.getConnector(user, new PasswordToken(pass.getBytes()));
         } catch (MissingArgumentException e){
             throw new IOException(StringUtils.stringifyException(e));
         } catch (AccumuloSecurityException e) {

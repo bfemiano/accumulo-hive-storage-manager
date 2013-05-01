@@ -10,12 +10,10 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * User: bfemiano
- * Date: 3/2/13
- * Time: 2:35 AM
+ * Holds column tuples for rowID. Each tuple contains
+ * column family label, qualifier label, and byte [] value.
  */
 public class AccumuloHiveRow implements Writable{
-    // create a list of column familes, qualifiers, and values.
 
     private String rowId;
     List<ColumnTuple> tuples = Lists.newArrayList();
@@ -31,6 +29,10 @@ public class AccumuloHiveRow implements Writable{
         this.rowId = rowId;
     }
 
+    /**
+     *
+     * @return true if this instance has a tuple containing fam and qual, false otherwise.
+     */
     public boolean hasFamAndQual(String fam, String qual) {
         for (ColumnTuple tuple : tuples) {
             if(tuple.getCf().equals(fam) && tuple.getQual().equals(qual)){
@@ -40,6 +42,10 @@ public class AccumuloHiveRow implements Writable{
         return false;
     }
 
+    /**
+     *
+     * @return byte [] value for first tuple containing fam and qual or null if no match.
+     */
     public byte[] getValue(String fam, String qual) {
         for (ColumnTuple tuple : tuples) {
             if(tuple.getCf().equals(fam) && tuple.getQual().equals(qual)){

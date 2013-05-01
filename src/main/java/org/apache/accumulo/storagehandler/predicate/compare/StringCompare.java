@@ -6,11 +6,12 @@ import org.apache.log4j.Logger;
 import java.util.regex.Pattern;
 
 /**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/22/13
- * Time: 1:39 AM
- * To change this template use File | Settings | File Templates.
+ *
+ * Set of comparison operations over a string constant. Used for Hive
+ * predicates involving string comparison.
+ *
+ * Used by {@link org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter}
+ *
  */
 public class StringCompare implements PrimitiveCompare {
 
@@ -24,9 +25,6 @@ public class StringCompare implements PrimitiveCompare {
 
     @Override
     public boolean isEqual(byte[] value) {
-        String val = serialize(value);
-        log.info("val: " + val);
-        log.info("constant: " + constant);
         return serialize(value).equals(constant);
     }
 

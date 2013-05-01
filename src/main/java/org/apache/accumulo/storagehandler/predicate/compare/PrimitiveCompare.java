@@ -1,20 +1,24 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
 /**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/22/13
- * Time: 12:27 AM
- * To change this template use File | Settings | File Templates.
+ *  Wraps type-specific comparison operations over a constant value.
+ *  Methods take raw byte from incoming Accumulo values.
+ *
+ *  The CompareOpt instance in the iterator uses one or more methods
+ *  from a PrimitiveCompare implementation to perform type-specific comparisons and
+ *  determine acceptances.
+ *
+ *  Used by {@link org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter}.
+ *  Works with {@link CompareOp}
  */
 public interface PrimitiveCompare {
 
     public boolean isEqual(byte[] value);
-    public boolean isNotEqual(byte [] value);
-    public boolean greaterThanOrEqual(byte [] value);
-    public boolean greaterThan(byte [] value);
+    public boolean isNotEqual(byte[] value);
+    public boolean greaterThanOrEqual(byte[] value);
+    public boolean greaterThan(byte[] value);
     public boolean lessThanOrEqual(byte[] value);
-    public boolean lessThan(byte [] value);
+    public boolean lessThan(byte[] value);
     public boolean like(byte[] value);
     public Object serialize(byte[] value);
     public void init(byte[] constant);

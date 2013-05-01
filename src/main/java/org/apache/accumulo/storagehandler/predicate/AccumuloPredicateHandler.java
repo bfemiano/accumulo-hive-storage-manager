@@ -31,11 +31,11 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/21/13
- * Time: 12:06 AM
- * To change this template use File | Settings | File Templates.
+ *
+ * Supporting operations dealing with Hive Predicate pushdown to iterators and ranges.
+ *
+ * See {@link PrimitiveComparisonFilter}
+ *
  */
 public class AccumuloPredicateHandler {
 
@@ -61,25 +61,44 @@ public class AccumuloPredicateHandler {
         pComparisons.put("string", StringCompare.class);
     }
 
+
     public static AccumuloPredicateHandler getInstance() {
         return handler;
     }
 
-    public Set<String> compareOpKeyset() {
+    /**
+     *
+     * @return set of all UDF class names with matching CompareOpt implementations.
+     */
+    public Set<String> cOpKeyset() {
         return compareOps.keySet();
     }
 
+    /**
+     *
+     * @return set of all hive data types with matching PrimitiveCompare implementations.
+     */
     public Set<String> pComparisonKeyset() {
         return pComparisons.keySet();
     }
 
+    /**
+     *
+     * @param udfType GenericUDF classname to lookup matching CompareOpt
+     * @return Class<? extends CompareOpt/>
+     */
     public Class<? extends CompareOp> getCompareOp(String udfType) {
         if(!compareOps.containsKey(udfType))
             throw new RuntimeException("Null compare op for specified key: " + udfType);
         return compareOps.get(udfType);
     }
 
-    public Class<? extends PrimitiveCompare> getPrimativeComparison(String type) {
+    /**
+     *
+     * @param type String hive column lookup matching PrimitiveCompare
+     * @return  Class<? extends ></?>
+     */
+    public Class<? extends PrimitiveCompare> getPrimitiveComparison(String type) {
         if(!pComparisons.containsKey(type))
             throw new RuntimeException("Null primitive comparison for specified key: " + type);
         return pComparisons.get(type);
@@ -88,11 +107,9 @@ public class AccumuloPredicateHandler {
     private AccumuloPredicateHandler(){}
 
     /**
-     * Loop through search conditions. Build ranges
+     * Loop through search conditions and build ranges
      * for predicates involving rowID column, if any.
      *
-     * @param conf
-     * @return
      */
     public Collection<Range> getRanges(JobConf conf)
         throws SerDeException {
@@ -107,6 +124,13 @@ public class AccumuloPredicateHandler {
         return ranges;
     }
 
+    /**
+     * Loop through search conditions and build iterator settings
+     * for predicates involving columns other than rowID, if any.
+     *
+     * @param conf JobConf
+     * @throws SerDeException
+     */
     public List<IteratorSetting> getIterators(JobConf conf)
             throws SerDeException{
         List<IteratorSetting> itrs = Lists.newArrayList();
@@ -117,95 +141,122 @@ public class AccumuloPredicateHandler {
 
         String rowIdCol = AccumuloHiveUtils.hiveColForRowID(conf);
         for(IndexSearchCondition sc : getSearchConditions(conf)) {
-            log.info(sc.getComparisonExpr().getExprString());
-            log.info("comp op " + sc.getComparisonOp());
-            log.info("const " + sc.getConstantDesc());
             String col = sc.getColumnDesc().getColumn();
             if(rowIdCol == null || !rowIdCol.equals(col))
                 itrs.add(toSetting(conf, col, sc));
-            log.info("num iterators = " + itrs.size());
         }
+        if(log.isInfoEnabled())
+            log.info("num iterators = " + itrs.size());
         return itrs;
     }
 
+    /**
+     * Convert search condition to start/stop range.
+     *
+     * @param sc IndexSearchCondition to build into Range.
+     * @throws SerDeException
+     */
     public Range toRange(IndexSearchCondition sc)
         throws SerDeException {
         Range range;
         PushdownTuple tuple = new PushdownTuple(sc);
         Text constText = new Text(tuple.getConstVal());
         if(tuple.getcOpt() instanceof Equal) {
-            range = new Range(constText, true, constText, true); //start inclusive - end inclusive
+            range = new Range(constText, true, constText, true); //start inclusive to end inclusive
         } else if (tuple.getcOpt() instanceof GreaterThanOrEqual) {
             range = new Range(constText, null); //start inclusive to infinity inclusive
         } else if (tuple.getcOpt() instanceof GreaterThan) {
             range = new Range(constText, false, null, true);  //start exclusive to infinity inclusive
         } else if (tuple.getcOpt() instanceof LessThanOrEqual) {
-            range = new Range(null, true, constText, true); //neg-infinity - start inclusive
+            range = new Range(null, true, constText, true); //neg-infinity to start inclusive
         } else if (tuple.getcOpt() instanceof LessThan) {
-            range = new Range(null, true, constText, false); //neg-infinity - start exclusive
+            range = new Range(null, true, constText, false); //neg-infinity to start exclusive
         } else {
             throw new SerDeException("Unsupported comparison operator involving rowid: " +
-                    tuple.getcOpt().getClass().getName() + " only =, <, <=, >, >=");
+                    tuple.getcOpt().getClass().getName() + " only =, !=, <, <=, >, >=");
         }
         return range;
     }
 
-    public IteratorSetting toSetting(JobConf conf, String hiveCol, IndexSearchCondition sc)
+    /**
+     * Create an IteratorSetting for the right qualifier, constant, CompareOpt, and
+     * PrimitiveCompare type.
+     *
+     * @param conf JobConf.
+     * @param hiveCol to lookup matching accumulo qualifier
+     * @param sc IndexSearchCondition
+     * @return IteratorSetting
+     * @throws SerDeException
+     */
+    public IteratorSetting toSetting(JobConf conf,
+                                     String hiveCol,
+                                     IndexSearchCondition sc)
             throws SerDeException{
         iteratorCount++;
-        IteratorSetting is = new IteratorSetting(iteratorCount, PrimativeComparisonFilter.FILTER_PREFIX + iteratorCount,
-                PrimativeComparisonFilter.class);
+        IteratorSetting is = new IteratorSetting(iteratorCount,
+                PrimitiveComparisonFilter.FILTER_PREFIX + iteratorCount,
+                PrimitiveComparisonFilter.class);
 
         PushdownTuple tuple = new PushdownTuple(sc);
-        is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, tuple.getpCompare().getClass().getName());
-        is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, tuple.getcOpt().getClass().getName());
-        is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(tuple.getConstVal())));
-        is.addOption(PrimativeComparisonFilter.COLUMN, AccumuloHiveUtils.hiveToAccumulo(hiveCol, conf));
+        is.addOption(PrimitiveComparisonFilter.P_COMPARE_CLASS, tuple.getpCompare().getClass().getName());
+        is.addOption(PrimitiveComparisonFilter.COMPARE_OPT_CLASS, tuple.getcOpt().getClass().getName());
+        is.addOption(PrimitiveComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(tuple.getConstVal())));
+        is.addOption(PrimitiveComparisonFilter.COLUMN, AccumuloHiveUtils.hiveToAccumulo(hiveCol, conf));
 
         return is;
     }
 
+    /**
+     *
+     * @param conf JobConf
+     * @return list of IndexSearchConditions from the filter expression.
+     */
     public List<IndexSearchCondition> getSearchConditions(JobConf conf) {
         List<IndexSearchCondition> sConditions = Lists.newArrayList();
         String filteredExprSerialized = conf.get(TableScanDesc.FILTER_EXPR_CONF_STR);
         if(filteredExprSerialized == null)
             return sConditions;
         ExprNodeDesc filterExpr = Utilities.deserializeExpression(filteredExprSerialized, conf);
-        log.info("expr type: " + filterExpr.getClass().getName());
         IndexPredicateAnalyzer analyzer = newAnalyzer(conf);
-        log.info("full expression string: " + filterExpr.getExprString());
-        for(ExprNodeDesc exp : filterExpr.getChildren()) {
-            log.info("child: " + exp.getExprString());
-        }
         ExprNodeDesc residual = analyzer.analyzePredicate(filterExpr, sConditions);
         if(residual != null)
             throw new RuntimeException("Unexpected residual predicate: " + residual.getExprString());
         return sConditions;
     }
 
+    /**
+     *
+     *
+     * @param conf JobConf
+     * @param desc predicate expression node.
+     * @return DecomposedPredicate containing translated search conditions the analyzer can support.
+     */
     public DecomposedPredicate decompose(JobConf conf, ExprNodeDesc desc) {
 
 
         IndexPredicateAnalyzer analyzer = newAnalyzer(conf);
-        log.info("decomposing predicate");
         List<IndexSearchCondition> sConditions = new ArrayList<IndexSearchCondition>();
         ExprNodeDesc residualPredicate = analyzer.analyzePredicate(desc, sConditions);
         if(sConditions.size() == 0){
-            log.info("nothing to decompose. Returning");
+            if(log.isInfoEnabled())
+                log.info("nothing to decompose. Returning");
             return null;
         }
-        log.info("setting up search indexes of length = " + sConditions.size());
         DecomposedPredicate decomposedPredicate  = new DecomposedPredicate();
         decomposedPredicate.pushedPredicate = analyzer.translateSearchConditions(sConditions);
         decomposedPredicate.residualPredicate = residualPredicate;
         return decomposedPredicate;
     }
 
+    /*
+     Build an analyzer that allows comparison opts from compareOpts map, and all
+     columns from table definition.
+     */
     private IndexPredicateAnalyzer newAnalyzer(JobConf conf)
     {
         IndexPredicateAnalyzer analyzer = new IndexPredicateAnalyzer();
         analyzer.clearAllowedColumnNames();
-        for(String op : compareOpKeyset()) {
+        for(String op : cOpKeyset()) {
             analyzer.addComparisonOp(op);
         }
 
@@ -216,6 +267,11 @@ public class AccumuloPredicateHandler {
         return analyzer;
     }
 
+    /**
+     * For use in IteratorSetting construction.
+     *
+     * encapsulates a constant byte [], PrimitiveCompare instance, and CompareOp instance.
+     */
     public static class PushdownTuple {
 
         private byte[] constVal;
@@ -230,7 +286,7 @@ public class AccumuloPredicateHandler {
         private void init(IndexSearchCondition sc) throws
                 SerDeException {
 
-            try{
+            try {
                 ExprNodeConstantEvaluator eval = new ExprNodeConstantEvaluator(sc.getConstantDesc());
                 String type = sc.getColumnDesc().getTypeString();
                 Class<? extends PrimitiveCompare> pClass = pComparisons.get(type);
@@ -269,6 +325,11 @@ public class AccumuloPredicateHandler {
             return cOpt;
         }
 
+        /**
+         *
+         * @return byte [] value from writable.
+         * @throws SerDeException
+         */
         public byte[] getConstantAsBytes(Writable writable)
                 throws SerDeException{
             if(pCompare instanceof StringCompare) {

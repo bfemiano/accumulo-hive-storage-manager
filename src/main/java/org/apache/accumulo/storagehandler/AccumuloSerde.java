@@ -20,9 +20,8 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 /**
- * User: bfemiano
- * Date: 2/27/13
- * Time: 4:49 PM
+ * Deserialization from Accumulo to LazyAccumuloRow for Hive.
+ *
  */
 public class AccumuloSerde implements SerDe {
     public static final String TABLE_NAME = "accumulo.table.name";
@@ -32,26 +31,17 @@ public class AccumuloSerde implements SerDe {
     public static final String INSTANCE_ID = "accumulo.instance.id";
     public static final String COLUMN_MAPPINGS = "accumulo.columns.mapping";
     public static final String NO_ITERATOR_PUSHDOWN = "accumulo.no.iterators";
-    public static final String MORE_ACCUMULO_THAN_HIVE = "You have more " + COLUMN_MAPPINGS + " fields than hive columns";
-    public static final String MORE_HIVE_THAN_ACCUMULO = "You have more hive columns than fields mapped with " + COLUMN_MAPPINGS;
+    private static final String MORE_ACCUMULO_THAN_HIVE = "You have more " + COLUMN_MAPPINGS + " fields than hive columns";
+    private static final String MORE_HIVE_THAN_ACCUMULO = "You have more hive columns than fields mapped with " + COLUMN_MAPPINGS;
     private LazySimpleSerDe.SerDeParameters serDeParameters;
     private LazyAccumuloRow cachedRow;
     private List<String> fetchCols;
-    private String colMapping;
-    private byte[] separators;
-    private boolean escaped;
-    private byte escapedChar;
-    private boolean[] needsEscape;
+    private ObjectInspector cachedObjectInspector;
 
     private static final Logger log = Logger.getLogger(AccumuloSerde.class);
     static {
         log.setLevel(Level.INFO);
     }
-
-    private ObjectInspector cachedObjectInspector;
-    //private static final String MAP_STRING_STRING_NAME = Constants.MAP_TYPE_NAME + "<" +
-    //Constants.STRING_TYPE_NAME + "," +
-    //Constants.STRING_TYPE_NAME + ">";
 
     public void initialize(Configuration conf, Properties properties) throws SerDeException {
         initAccumuloSerdeParameters(conf, properties);
@@ -75,7 +65,6 @@ public class AccumuloSerde implements SerDe {
 
     /***
      * For testing purposes.
-     * @return
      */
     public LazyAccumuloRow getCachedRow() {
         return cachedRow;
@@ -83,13 +72,13 @@ public class AccumuloSerde implements SerDe {
 
     private void initAccumuloSerdeParameters(Configuration conf, Properties properties)
             throws SerDeException{
-        colMapping = properties.getProperty(COLUMN_MAPPINGS);
+        String colMapping = properties.getProperty(COLUMN_MAPPINGS);
         String colTypeProperty = properties.getProperty(serdeConstants.LIST_COLUMN_TYPES);
         String name = getClass().getName();
         fetchCols = AccumuloHiveUtils.parseColumnMapping(colMapping);
         if (colTypeProperty == null) {
             StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < fetchCols.size(); i++) {
+            for (String fetchCol : fetchCols) { //default to all string if no column type property.
                 builder.append(serdeConstants.STRING_TYPE_NAME + ":");
             }
             int indexOfLastColon = builder.lastIndexOf(":");
@@ -102,12 +91,9 @@ public class AccumuloSerde implements SerDe {
             throw new SerDeException(name + ": Hive table definition has "
                     + serDeParameters.getColumnNames().size() +
                     " elements while " + COLUMN_MAPPINGS + " has " +
-                    fetchCols.size() + " elements. " + printColumnMismatchTip(fetchCols.size(), serDeParameters.getColumnNames().size()));
+                    fetchCols.size() + " elements. " + printColumnMismatchTip(fetchCols.size(),
+                    serDeParameters.getColumnNames().size()));
         }
-        separators = serDeParameters.getSeparators();
-        escaped = serDeParameters.isEscaped();
-        escapedChar = serDeParameters.getEscapeChar();
-        needsEscape = serDeParameters.getNeedsEscape();
 
         if(log.isInfoEnabled())
             log.info("Serde initialized successfully for column mapping: " + colMapping);

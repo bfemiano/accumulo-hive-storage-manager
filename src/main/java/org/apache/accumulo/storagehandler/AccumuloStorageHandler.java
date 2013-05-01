@@ -25,12 +25,10 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
- * User: bfemiano
- * Date: 7/10/12
- * Time: 1:37 AM
+ * Create table mapping to Accumulo for Hive.
+ * Handle predicate pushdown if necessary.
  */
 public class AccumuloStorageHandler
         implements HiveStorageHandler,HiveMetaHook, HiveStoragePredicateHandler {
@@ -42,7 +40,6 @@ public class AccumuloStorageHandler
         log.setLevel(Level.INFO);
     }
     private AccumuloPredicateHandler predicateHandler = AccumuloPredicateHandler.getInstance();
-    private static final Pattern COMMA = Pattern.compile("[,]");
 
     private Connector getConnector()
             throws MetaException{
@@ -57,6 +54,11 @@ public class AccumuloStorageHandler
         return connector;
     }
 
+    /**
+     *
+     * @param desc table description
+     * @param jobProps
+     */
     @Override
     public void configureTableJobProperties(TableDesc desc,
                                             Map<String, String> jobProps) {
@@ -119,7 +121,7 @@ public class AccumuloStorageHandler
     }
 
     @Override
-    public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> stringStringMap) {
+    public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> map) {
         //TODO: implement for serialization to Accumulo
     }
 
@@ -233,7 +235,6 @@ public class AccumuloStorageHandler
     public DecomposedPredicate decomposePredicate(JobConf conf,
                                                   Deserializer deserializer,
                                                   ExprNodeDesc desc) {
-        log.info("Calling decompose predicate");
         if(conf.get(AccumuloSerde.NO_ITERATOR_PUSHDOWN) == null){
             return predicateHandler.decompose(conf, desc);
         } else {

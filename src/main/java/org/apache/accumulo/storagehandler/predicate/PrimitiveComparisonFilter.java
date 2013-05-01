@@ -17,13 +17,15 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/23/13
- * Time: 11:28 PM
- * To change this template use File | Settings | File Templates.
+ * Operates over a single qualifier.
+ *
+ * Delegates to PrimitiveCompare and CompareOpt instances for
+ * value acceptance.
+ *
+ * The PrimitiveCompare strategy assumes a consistent value type for the same column family and qualifier.
+ *
  */
-public class PrimativeComparisonFilter extends WholeRowIterator {
+public class PrimitiveComparisonFilter extends WholeRowIterator {
 
     public static final String FILTER_PREFIX = "accumulo.filter.compare.iterator.";
     public static final String P_COMPARE_CLASS = "accumulo.filter.iterator.p.compare.class";
@@ -35,27 +37,27 @@ public class PrimativeComparisonFilter extends WholeRowIterator {
 
     private CompareOp compOpt;
 
-    private static final Logger log = Logger.getLogger(PrimativeComparisonFilter.class);
+    private static final Logger log = Logger.getLogger(PrimitiveComparisonFilter.class);
     private static final Pattern PIPE_PATTERN = Pattern.compile("[|]");
 
     @Override
     protected boolean filter(Text currentRow, List<Key> keys, List<Value> values) {
         SortedMap<Key,Value> items;
         boolean allow;
-        try {
+        try {       //if key doesn't contain CF, it's an encoded value from a previous iterator.
             while(keys.get(0).getColumnFamily().getBytes().length == 0) {
                 items = decodeRow(keys.get(0), values.get(0));
                 keys = Lists.newArrayList(items.keySet());
                 values = Lists.newArrayList(items.values());
             }
-            allow = filterNormal(keys, values);
+            allow = accept(keys, values);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return allow;
     }
 
-    private boolean filterNormal(Collection<Key> keys, Collection<Value> values) {
+    private boolean accept(Collection<Key> keys, Collection<Value> values) {
         Iterator<Key> kIter = keys.iterator();
         Iterator<Value> vIter = values.iterator();
         while(kIter.hasNext()) {
@@ -93,14 +95,9 @@ public class PrimativeComparisonFilter extends WholeRowIterator {
             compOpt = cClazz.asSubclass(CompareOp.class).newInstance();
             String b64Const = options.get(CONST_VAL);
             String constStr = new String(Base64.decodeBase64(b64Const.getBytes()));
-            log.info("constant: " + constStr);
-            log.info("copt: " + cClazz.getName());
-            log.info("pCompare: " + pClass.getName());
-            log.info("cf: " + cf);
-            log.info("qual:" + qual);
             byte [] constant = constStr.getBytes();
             pCompare.init(constant);
-            compOpt.setPrimativeCompare(pCompare);
+            compOpt.setPrimitiveCompare(pCompare);
         } catch (ClassNotFoundException e) {
             throw new IOException(e);
         } catch (InstantiationException e) {

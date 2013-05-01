@@ -11,7 +11,7 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.util.Pair;
 import org.apache.accumulo.core.util.PeekingIterator;
 import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
-import org.apache.accumulo.storagehandler.predicate.PrimativeComparisonFilter;
+import org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -27,25 +27,25 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * User: bfemiano
- * Date: 3/2/13
- * Time: 2:43 AM
+ * Wraps older InputFormat for use with Hive.
+ *
+ * Configure input scan with proper ranges, iterators, and columns based on
+ * serde properties for Hive table.
  */
 public class HiveAccumuloTableInputFormat
         extends AccumuloRowInputFormat
         implements org.apache.hadoop.mapred.InputFormat<Text, AccumuloHiveRow> {
+
     private static final Pattern PIPE = Pattern.compile("[|]");
     private AccumuloPredicateHandler predicateHandler = AccumuloPredicateHandler.getInstance();
     private Instance instance;
 
     @Override
     public InputSplit[] getSplits(JobConf jobConf, int numSplits) throws IOException {
-        String tableName = jobConf.get(AccumuloSerde.TABLE_NAME);
         String id = jobConf.get(AccumuloSerde.INSTANCE_ID);
         String user = jobConf.get(AccumuloSerde.USER_NAME);
         String pass = jobConf.get(AccumuloSerde.USER_PASS);
@@ -55,8 +55,7 @@ public class HiveAccumuloTableInputFormat
         try {
             Connector connector =  instance.getConnector(user,  new PasswordToken(pass.getBytes()));
             String colMapping = jobConf.get(AccumuloSerde.COLUMN_MAPPINGS);
-            List<String> colQualFamPairs;
-            colQualFamPairs = AccumuloHiveUtils.parseColumnMapping(colMapping);
+            List<String> colQualFamPairs = AccumuloHiveUtils.parseColumnMapping(colMapping);
             configure(job, jobConf, connector, colQualFamPairs);
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
             int incForRowID = AccumuloHiveUtils.containsRowID(colMapping) ? 1 : 0;
@@ -66,12 +65,11 @@ public class HiveAccumuloTableInputFormat
 
             JobContext context = new JobContext(job.getConfiguration(), job.getJobID());
             Path[] tablePaths = FileInputFormat.getInputPaths(context);
-            List<org.apache.hadoop.mapreduce.InputSplit> splits = super.getSplits(job);
+            List<org.apache.hadoop.mapreduce.InputSplit> splits = super.getSplits(job); //get splits from Accumulo.
             InputSplit[] newSplits = new InputSplit[splits.size()];
             for (int i = 0; i < splits.size(); i++) {
                 RangeInputSplit ris = (RangeInputSplit)splits.get(i);
                 newSplits[i] = new AccumuloSplit(ris, tablePaths[0]);
-
             }
             return newSplits;
         }  catch (AccumuloException e) {
@@ -92,17 +90,27 @@ public class HiveAccumuloTableInputFormat
         }
     }
 
-    //for testing purposes
+    //for testing purposes to set MockInstance
     public void setInstance(Instance instance) {
         this.instance = instance;
     }
 
 
-
+    /**
+     * Setup accumulo input format from conf properties.
+     * Delegates to final RecordReader from mapred package.
+     *
+     * @param inputSplit
+     * @param jobConf
+     * @param reporter
+     * @return RecordReader
+     * @throws IOException
+     */
     @Override
-    public RecordReader<Text, AccumuloHiveRow> getRecordReader(InputSplit inputSplit,
-                                                               final JobConf jobConf,
-                                                               final Reporter reporter) throws IOException {
+    public RecordReader<Text, AccumuloHiveRow> getRecordReader(
+            InputSplit inputSplit,
+            final JobConf jobConf,
+            final Reporter reporter) throws IOException {
 
 
         String user = jobConf.get(AccumuloSerde.USER_NAME);
@@ -121,13 +129,13 @@ public class HiveAccumuloTableInputFormat
             configure(job, jobConf, connector, colQualFamPairs);
 
             List<Integer> readColIds = ColumnProjectionUtils.getReadColumnIDs(jobConf);
-            int incForRowID = AccumuloHiveUtils.containsRowID(colMapping) ? 1 : 0;
+            int incForRowID = AccumuloHiveUtils.containsRowID(colMapping) ? 1 : 0; //offset by +1 if table mapping contains rowID
             if (colQualFamPairs.size() + incForRowID < readColIds.size())
                 throw new IOException("Number of colfam:qual pairs + rowID (" + (colQualFamPairs.size() + incForRowID) + ")" +
                         " numbers less than the hive table columns. (" + readColIds.size() + ")");
 
 
-
+            //for use to initialize final record reader.
             final TaskAttemptContext tac =
                     new TaskAttemptContext(job.getConfiguration(), new TaskAttemptID()) {
 
@@ -192,23 +200,23 @@ public class HiveAccumuloTableInputFormat
                             row.setRowId(key.toString());
                             List<Key> keys = Lists.newArrayList();
                             List<Value> values = Lists.newArrayList();
-                            while(iter.hasNext()) {
+                            while(iter.hasNext()) {  //collect key/values for this row.
                                 Map.Entry<Key, Value> kv = iter.next();
                                 keys.add(kv.getKey());
                                 values.add(kv.getValue());
 
                             }
-                            if(itrCount == 0) {
+                            if(itrCount == 0) {  //no encoded values, we can push directly to row.
                                 pushToValue(keys, values, row);
                             }
                             else {
-                                for(int i = 0; i < itrCount; i++) {
-                                    log.info("attempting to decode");
-                                    SortedMap<Key,Value> decoded = PrimativeComparisonFilter.decodeRow(keys.get(0), values.get(0));
+                                for(int i = 0; i < itrCount; i++) { //each iterator creates a level of encoding.
+                                    SortedMap<Key,Value> decoded =
+                                            PrimitiveComparisonFilter.decodeRow(keys.get(0), values.get(0));
                                     keys = Lists.newArrayList(decoded.keySet());
                                     values = Lists.newArrayList(decoded.values());
                                 }
-                                pushToValue(keys, values, row);
+                                pushToValue(keys, values, row); //after decoding we can push to value.
                             }
                         }
                     } catch (InterruptedException e) {
@@ -217,6 +225,7 @@ public class HiveAccumuloTableInputFormat
                     return next;
                 }
 
+                //flatten key/value pairs into row object for use in Serde.
                 private void pushToValue(List<Key> keys, List<Value> values, AccumuloHiveRow row)
                         throws IOException {
                     Iterator<Key> kIter = keys.iterator();
@@ -257,15 +266,18 @@ public class HiveAccumuloTableInputFormat
         setConnectorInfo(job, user, new PasswordToken(pass.getBytes()));
         setInputTableName(job, tableName);
         setScanAuthorizations(job, connector.securityOperations().getUserAuthorizations(user));
-        List<IteratorSetting> iterators = predicateHandler.getIterators(conf);
+        List<IteratorSetting> iterators = predicateHandler.getIterators(conf); //restrict with any filters found from WHERE predicates.
         for(IteratorSetting is : iterators)
             addIterator(job, is);
-        Collection<Range> ranges = predicateHandler.getRanges(conf);
+        Collection<Range> ranges = predicateHandler.getRanges(conf); //restrict with any ranges found from WHERE predicates.
         if(ranges.size() > 0)
             setRanges(job, ranges);
         fetchColumns(job, getPairCollection(colQualFamPairs));
     }
 
+    /*
+      Create col fam/qual pairs from pipe separated values, usually from config object. Ignores rowID.
+     */
     private Collection<Pair<Text, Text>> getPairCollection(List<String> colQualFamPairs) {
         List<Pair<Text, Text>> pairs = Lists.newArrayList();
         for (String colQualFam : colQualFamPairs) {

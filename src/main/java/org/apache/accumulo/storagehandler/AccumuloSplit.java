@@ -32,7 +32,7 @@ import java.io.IOException;
 
 
 /**
- * wraps RangeInputSplit into the older MapReduce split package.
+ * Wraps RangeInputSplit into the older MapReduce split package.
  */
 public class AccumuloSplit extends FileSplit implements InputSplit {
   private RangeInputSplit split;

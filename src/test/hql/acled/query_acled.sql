@@ -20,6 +20,6 @@ STORED BY 'org.apache.accumulo.storagehandler.AccumuloStorageHandler'
 WITH SERDEPROPERTIES ('accumulo.columns.mapping' = 'rowID,cf|lat,cf|lon,cf|loc,cf|src,cf|type,cf|fid,cf|pid',
 	'accumulo.table.name' = 'acled'); 
 		
-select type,lat,lon from acled where type like '%civilians' and fid = 20;
+select type,lat,lon from acled where pid = 3333 and fid = 20 and type like 'Violence%';
 
 

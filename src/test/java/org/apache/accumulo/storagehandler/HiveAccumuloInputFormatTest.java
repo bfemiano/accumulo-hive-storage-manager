@@ -7,7 +7,7 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.storagehandler.predicate.PrimativeComparisonFilter;
+import org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter;
 import org.apache.accumulo.storagehandler.predicate.compare.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.fs.Path;
@@ -234,22 +234,22 @@ public class HiveAccumuloInputFormatTest {
         try {
             Connector con = mockInstance.getConnector(USER, new PasswordToken(PASS.getBytes()));
             Scanner scan = con.createScanner(TEST_TABLE, new Authorizations("blah"));
-            IteratorSetting is = new IteratorSetting(1, PrimativeComparisonFilter.FILTER_PREFIX + 1,
-                    PrimativeComparisonFilter.class);
+            IteratorSetting is = new IteratorSetting(1, PrimitiveComparisonFilter.FILTER_PREFIX + 1,
+                    PrimitiveComparisonFilter.class);
 
-            is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, DoubleCompare.class.getName());
-            is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, GreaterThanOrEqual.class.getName());
-            is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseDoubleBytes("55.6"))));
-            is.addOption(PrimativeComparisonFilter.COLUMN, "cf|dgrs");
+            is.addOption(PrimitiveComparisonFilter.P_COMPARE_CLASS, DoubleCompare.class.getName());
+            is.addOption(PrimitiveComparisonFilter.COMPARE_OPT_CLASS, GreaterThanOrEqual.class.getName());
+            is.addOption(PrimitiveComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseDoubleBytes("55.6"))));
+            is.addOption(PrimitiveComparisonFilter.COLUMN, "cf|dgrs");
             scan.addScanIterator(is);
 
-            IteratorSetting is2 = new IteratorSetting(2, PrimativeComparisonFilter.FILTER_PREFIX + 2,
-                    PrimativeComparisonFilter.class);
+            IteratorSetting is2 = new IteratorSetting(2, PrimitiveComparisonFilter.FILTER_PREFIX + 2,
+                    PrimitiveComparisonFilter.class);
 
-            is2.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, LongCompare.class.getName());
-            is2.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, LessThan.class.getName());
-            is2.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseLongBytes("778"))));
-            is2.addOption(PrimativeComparisonFilter.COLUMN, "cf|mills");
+            is2.addOption(PrimitiveComparisonFilter.P_COMPARE_CLASS, LongCompare.class.getName());
+            is2.addOption(PrimitiveComparisonFilter.COMPARE_OPT_CLASS, LessThan.class.getName());
+            is2.addOption(PrimitiveComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseLongBytes("778"))));
+            is2.addOption(PrimitiveComparisonFilter.COLUMN, "cf|mills");
 
             scan.addScanIterator(is2);
 
@@ -260,9 +260,9 @@ public class HiveAccumuloInputFormatTest {
                 boolean foundSid = false;
                 boolean foundDegrees = false;
                 boolean foundMillis = false;
-                SortedMap<Key,Value> items = PrimativeComparisonFilter.decodeRow(kv.getKey(), kv.getValue());
+                SortedMap<Key,Value> items = PrimitiveComparisonFilter.decodeRow(kv.getKey(), kv.getValue());
                 for(Map.Entry<Key, Value> item: items.entrySet()) {
-                    SortedMap<Key, Value> nestedItems = PrimativeComparisonFilter.decodeRow(item.getKey(), item.getValue());
+                    SortedMap<Key, Value> nestedItems = PrimitiveComparisonFilter.decodeRow(item.getKey(), item.getValue());
                     for(Map.Entry<Key,Value> nested : nestedItems.entrySet()) {
                         if(nested.getKey().getRow().toString().equals("r3")) {
                             foundDennis = true;
@@ -299,13 +299,13 @@ public class HiveAccumuloInputFormatTest {
         try {
             Connector con = mockInstance.getConnector(USER, new PasswordToken(PASS.getBytes()));
             Scanner scan = con.createScanner(TEST_TABLE, new Authorizations("blah"));
-            IteratorSetting is = new IteratorSetting(1, PrimativeComparisonFilter.FILTER_PREFIX + 1,
-                    PrimativeComparisonFilter.class);
+            IteratorSetting is = new IteratorSetting(1, PrimitiveComparisonFilter.FILTER_PREFIX + 1,
+                    PrimitiveComparisonFilter.class);
 
-            is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, IntCompare.class.getName());
-            is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, GreaterThan.class.getName());
-            is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseIntBytes("1"))));
-            is.addOption(PrimativeComparisonFilter.COLUMN, "cf|sid");
+            is.addOption(PrimitiveComparisonFilter.P_COMPARE_CLASS, IntCompare.class.getName());
+            is.addOption(PrimitiveComparisonFilter.COMPARE_OPT_CLASS, GreaterThan.class.getName());
+            is.addOption(PrimitiveComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64(parseIntBytes("1"))));
+            is.addOption(PrimitiveComparisonFilter.COLUMN, "cf|sid");
             scan.addScanIterator(is);
             boolean foundMark = false;
             boolean foundDennis = false;
@@ -315,7 +315,7 @@ public class HiveAccumuloInputFormatTest {
                 boolean foundSid = false;
                 boolean foundDegrees = false;
                 boolean foundMillis = false;
-                SortedMap<Key,Value> items = PrimativeComparisonFilter.decodeRow(kv.getKey(), kv.getValue());
+                SortedMap<Key,Value> items = PrimitiveComparisonFilter.decodeRow(kv.getKey(), kv.getValue());
                 for(Map.Entry<Key, Value> item: items.entrySet()) {
                     if(item.getKey().getRow().toString().equals("r2")) {
                         foundMark = true;
@@ -353,20 +353,20 @@ public class HiveAccumuloInputFormatTest {
         try {
             Connector con = mockInstance.getConnector(USER, new PasswordToken(PASS.getBytes()));
             Scanner scan = con.createScanner(TEST_TABLE, new Authorizations("blah"));
-            IteratorSetting is = new IteratorSetting(1, PrimativeComparisonFilter.FILTER_PREFIX + 1,
-                    PrimativeComparisonFilter.class);
+            IteratorSetting is = new IteratorSetting(1, PrimitiveComparisonFilter.FILTER_PREFIX + 1,
+                    PrimitiveComparisonFilter.class);
 
-            is.addOption(PrimativeComparisonFilter.P_COMPARE_CLASS, StringCompare.class.getName());
-            is.addOption(PrimativeComparisonFilter.COMPARE_OPT_CLASS, Equal.class.getName());
-            is.addOption(PrimativeComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64("brian".getBytes())));
-            is.addOption(PrimativeComparisonFilter.COLUMN, "cf|name");
+            is.addOption(PrimitiveComparisonFilter.P_COMPARE_CLASS, StringCompare.class.getName());
+            is.addOption(PrimitiveComparisonFilter.COMPARE_OPT_CLASS, Equal.class.getName());
+            is.addOption(PrimitiveComparisonFilter.CONST_VAL,  new String(Base64.encodeBase64("brian".getBytes())));
+            is.addOption(PrimitiveComparisonFilter.COLUMN, "cf|name");
             scan.addScanIterator(is);
             boolean foundName = false;
             boolean foundSid = false;
             boolean foundDegrees = false;
             boolean foundMillis = false;
             for(Map.Entry<Key,Value> kv : scan) {
-                SortedMap<Key,Value> items = PrimativeComparisonFilter.decodeRow(kv.getKey(), kv.getValue());
+                SortedMap<Key,Value> items = PrimitiveComparisonFilter.decodeRow(kv.getKey(), kv.getValue());
                 for(Map.Entry<Key, Value> item: items.entrySet()) {
                     assertEquals(item.getKey().getRow().toString(), "r1");
                     if(item.getKey().getColumnQualifier().equals(NAME)){
