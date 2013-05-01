@@ -1,11 +1,7 @@
-Accumulo-hive-storage-manager
-=============================
+
+Query data stored in Accumulo tables directly with HiveQL. 
 
 Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
-
-Manage your Accumulo tables through the Hive metastore, and issue queries directly over the underlying column familes and qualifiers. 
-
-Requires Hive 0.10 and Accumulo 1.5+ which both use Thrift 0.9. Otherwise there are binary incompatibilities. 
 
 Setup:
 =================
@@ -18,7 +14,9 @@ Documentation:
 
 <a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a>
 
-<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/examples">Basic tutorial</a>
+<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic%20Tutorial">Basic tutorial</a>
+
+<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Aux%20Jars%20List">List of required aux jars</a>
 
 ACLED examples:
 =================
@@ -36,12 +34,14 @@ The query examples use a cleaned up version of the structured Acled Nigeria data
 Known limitations:
 ===================
 
-* 	Supported Hive column types limited to int, double, string and bigint. 
-*	The Hive column types must match Accumulo value types to avoid odd behavior. An Accumulo value holding integer bytes should be mapped as a hive column of type int. 
+* 	Requires Hive 0.10 and Accumulo 1.5+ which both use Thrift 0.9. Otherwise there are binary incompatibilities. 
+*	Supported Hive column types limited to int, double, string and bigint.
+*	Hive column type mapping assumes value type consistency for the same qualifier across different rows. For example, r1/cf/q/v cannot hold an int while r2/cf/q/v is a double. 
+*	The Hive column types must match Accumulo value types. An Accumulo value holding integer bytes should be mapped as a hive column of type int. 
 * 	Does not yet support INSERT.
 * 	Iterator pushdown only works on WHERE clauses consisting of purely conjunctive predicates. This is a known Hive limitation with the IndexPredicateAnalyzer.
-* 	'Like' CompareOpt exists is not considered decomposable by the predicate analyzer.
-*	Iterator pushdown only kicks in for operators <, >, =, >=, <=. 
+* 	'Like' CompareOpt is not considered decomposable by the predicate analyzer. This has to do with the Hive UDFLike not extending GenericUDF. 
+*	Iterator pushdown only kicks in for operators <, >, =, >=, <=, !=.  
 
 Future enhancements: 
 ====================
