@@ -37,7 +37,6 @@ Known limitations:
 
 * 	Requires Hive 0.10 and Accumulo 1.5+ which both use Thrift 0.9. Otherwise there are binary incompatibilities. 
 *	Supported Hive column types limited to int, double, string and bigint.
-*	Security Authorizations cannot be supplied from an external source. 
 *	Hive column type mapping assumes value type consistency for the same qualifier across different rows. For example, r1/cf/q/v cannot hold an int while r2/cf/q/v is a double. 
 *	The Hive column types must match Accumulo value types. An Accumulo value holding integer bytes should be mapped as a hive column of type int. 
 * 	Does not yet support INSERT.
@@ -53,3 +52,4 @@ Future enhancements:
 *   Allow per-qualifier type hints in the serde property, similar to the latest build of the HBase StorageHandler.  
 *   Support for remaining hive primitive column types.
 *   Support for complex value types (Struct, Map, Array, Union).
+*	Allow custom Authorizations to be supplied from an external source. 
