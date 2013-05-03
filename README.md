@@ -2,16 +2,11 @@ Query data stored in Accumulo tables directly with HiveQL.
 
 Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
 
-Setup:
-=================
+# <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic-Tutorial">Getting Started Guide</a> #
 
-Before you can build this storage handler, checkout and build Accumulo from the latest source. <code>svn co https://svn.apache.org/repos/asf/accumulo/trunk/</code> then <code>mvn clean install</code> to get 1.6.0 installed in your local repo. This will
-have to do until Accumulo 1.5+ is hosted in maven central.
 
 Documentation:
 =================
-
-<p style='font-size: 16pt'><a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic-Tutorial">Basic Tutorial</a></p>
 
 <a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a>
 
