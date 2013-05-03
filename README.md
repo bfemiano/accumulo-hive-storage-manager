@@ -11,9 +11,9 @@ have to do until Accumulo 1.5+ is hosted in maven central.
 Documentation:
 =================
 
-<a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a>
+<p style='font-size: 16pt'><a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic-Tutorial">Basic Tutorial</a></p>
 
-<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic-Tutorial">Basic Tutorial</a>
+<a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a>
 
 <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Iterator Predicate pushdown">How Iterator Predicate pushdown works</a>
 
@@ -37,6 +37,7 @@ Known limitations:
 
 * 	Requires Hive 0.10 and Accumulo 1.5+ which both use Thrift 0.9. Otherwise there are binary incompatibilities. 
 *	Supported Hive column types limited to int, double, string and bigint.
+*	
 *	Hive column type mapping assumes value type consistency for the same qualifier across different rows. For example, r1/cf/q/v cannot hold an int while r2/cf/q/v is a double. 
 *	The Hive column types must match Accumulo value types. An Accumulo value holding integer bytes should be mapped as a hive column of type int. 
 * 	Does not yet support INSERT.
