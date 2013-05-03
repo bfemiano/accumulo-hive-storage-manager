@@ -13,6 +13,8 @@ Documentation:
 
 <a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a>
 
+<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic-Tutorial">Basic Tutorial</a>
+
 <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Required-Aux-Jars">List of required aux jars</a>
 
 ACLED examples:
