@@ -1,4 +1,6 @@
-Query data stored in Accumulo tables directly with HiveQL. Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
+Query data stored in Accumulo tables directly with HiveQL. 
+
+Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
 
 # <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic-Tutorial">Getting Started Guide</a> #
 
