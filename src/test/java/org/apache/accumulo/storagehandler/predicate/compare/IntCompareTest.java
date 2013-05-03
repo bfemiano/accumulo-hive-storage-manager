@@ -9,13 +9,6 @@ import static org.testng.Assert.*;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-/**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/23/13
- * Time: 1:49 AM
- * To change this template use File | Settings | File Templates.
- */
 public class IntCompareTest {
     private IntCompare intCompare;
 

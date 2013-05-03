@@ -12,11 +12,6 @@ import java.util.Properties;
 
 import static org.testng.Assert.*;
 
-/**
- * User: bfemiano
- * Date: 3/30/13
- * Time: 4:53 PM
- */
 public class AccumuloSerdeTest {
 
     AccumuloSerde serde = new AccumuloSerde();

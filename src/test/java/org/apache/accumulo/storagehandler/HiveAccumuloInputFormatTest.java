@@ -29,11 +29,6 @@ import java.util.SortedMap;
 
 import static org.testng.Assert.*;
 
-/**
- * User: bfemiano
- * Date: 3/30/13
- * Time: 4:53 PM
- */
 public class HiveAccumuloInputFormatTest {
 
 
@@ -51,36 +46,6 @@ public class HiveAccumuloInputFormatTest {
     private JobConf conf;
 
     private static final Logger log = Logger.getLogger(HiveAccumuloInputFormatTest.class);
-
-    //@Test
-    public void getBytesValues() {
-        ZooKeeperInstance zooInst = new ZooKeeperInstance(MOCK_INSTANCE_NAME, "localhost:2181");
-        try {
-            Connector con = zooInst.getConnector(USER, new PasswordToken(PASS.getBytes()));
-            Scanner scan = con.createScanner("acled", new Authorizations());
-            for(Map.Entry<Key,Value> item : scan) {
-                log.info(item.getKey().getColumnQualifier());
-                if(item.getKey().getColumnQualifier().toString().equals("lat") ||
-                        item.getKey().getColumnQualifier().toString().equals("lon")) {
-                    double val = ByteBuffer.wrap(item.getValue().get()).asDoubleBuffer().get();
-                    log.info(val);
-                }  else if(item.getKey().getColumnQualifier().toString().equals("fid")) {
-                    int val = ByteBuffer.wrap(item.getValue().get()).asIntBuffer().get();
-                    log.info(val);
-                } else if(item.getKey().getColumnQualifier().toString().equals("pid")) {
-                    long val = ByteBuffer.wrap(item.getValue().get()).asLongBuffer().get();
-                    log.info(val);
-                }
-                log.info("-----");
-            }
-        } catch (AccumuloSecurityException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (AccumuloException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (TableNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-    }
 
     @BeforeClass
     public void createMockKeyValues() {

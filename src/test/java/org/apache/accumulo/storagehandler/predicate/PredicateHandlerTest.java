@@ -7,6 +7,7 @@ import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.storagehandler.AccumuloSerde;
 import org.apache.accumulo.storagehandler.predicate.compare.*;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.plan.*;
@@ -18,6 +19,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
@@ -38,6 +40,7 @@ public class PredicateHandlerTest {
 
     private AccumuloPredicateHandler handler = AccumuloPredicateHandler.getInstance();
     private JobConf conf;
+
 
 
     @Test
@@ -533,6 +536,7 @@ public class PredicateHandlerTest {
     }
 
     private void setup() {
+        FunctionRegistry. getFunctionNames();
         conf = new JobConf();
         conf.set(serdeConstants.LIST_COLUMNS, "field1,rid");
         conf.set(serdeConstants.LIST_COLUMN_TYPES, "string,string");

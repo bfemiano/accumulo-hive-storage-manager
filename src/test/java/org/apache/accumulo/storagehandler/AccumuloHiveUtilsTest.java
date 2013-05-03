@@ -9,13 +9,6 @@ import static org.testng.Assert.*;
 
 import java.util.List;
 
-/**
- * Created with IntelliJ IDEA.
- * User: bfemiano
- * Date: 4/22/13
- * Time: 11:00 PM
- * To change this template use File | Settings | File Templates.
- */
 public class AccumuloHiveUtilsTest {
 
     private JobConf conf = new JobConf();
