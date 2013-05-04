@@ -4,7 +4,7 @@ Pertains to patch: https://issues.apache.org/jira/browse/ACCUMULO-143
 
 # <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Basic-Tutorial">Getting Started Guide</a> 
 
-## <a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a> 
+##### <a href="http://storage-handler-docs.s3.amazonaws.com/javadocs/index.html">Javadocs</a> 
 
 ## <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Iterator Predicate pushdown">How Iterator Predicate pushdown works</a>
 
