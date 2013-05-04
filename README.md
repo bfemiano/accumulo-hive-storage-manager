@@ -11,7 +11,7 @@ Documentation:
 
 <a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Iterator Predicate pushdown">How Iterator Predicate pushdown works</a>
 
-<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Required-Aux-Jars">List of required aux jars</a>
+<a href="https://github.com/bfemiano/accumulo-hive-storage-manager/wiki/Required-Aux-Jars">List of required AUX_JARS</a>
 
 ACLED examples:
 =================
