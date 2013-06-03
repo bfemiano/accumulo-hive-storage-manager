@@ -44,3 +44,8 @@ Future enhancements:
 *   Support for remaining hive primitive column types.
 *   Support for complex value types (Struct, Map, Array, Union).
 *	Allow custom Authorizations to be supplied from an external source. 
+
+Usage
+====================
+
+Licensed AS-IS under Apache License 2.0
